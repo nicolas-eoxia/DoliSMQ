@@ -438,3 +438,5 @@ Remain                   = reste
 InProgressAndLocked      = -- (En cours + verrouillé) --
 NoObservations           = Pas d'observations
 BasedOnModel             = Basé sur le modèle
+TinyUrlControlHistoryLink     = TinyURL-historique-de-contrôle
+TinyUrlControlHistoryLinkHelp = Transformation d'une URL en URL raccourcie (lien d'historique de contrôle)

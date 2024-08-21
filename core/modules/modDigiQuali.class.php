@@ -129,6 +129,7 @@ class modDigiQuali extends DolibarrModules
                 'main',
                 'controladmin',
                 'surveyadmin',
+                'settinyurllinkcontrol_history'
 			],
 			// Set this to 1 if features of module are opened to external users
 			'moduleforexternal' => 0,
@@ -725,10 +726,12 @@ class modDigiQuali extends DolibarrModules
 				$linkableObject = new $className($this->db);
 				$tableElement   = $linkableObject->table_element;
 
+                $extraFields->update('qc_frequency', 'QcFrequency', 'int', 10, $tableElement, 0, 0, 100, 'a:1:{s:7:"options";a:1:{s:0:"";N;}}', 1, '', 1, '', '', '', 0, 'digiquali@digiquali', '$conf->digiquali->enabled');
                 $extraFields->addExtraField('qc_frequency', 'QcFrequency', 'int', 100, 10, $tableElement, 0, 0, '', 'a:1:{s:7:"options";a:1:{s:0:"";N;}}', 1, '', 1, '','',0, 'digiquali@digiquali', '$conf->digiquali->enabled');
-
-                $extraFields->update('control_history_link', 'ControlHistoryLink', 'varchar', 255, $tableElement, 0, 0, 110, '', 0, '', 5, '', '', '', 0, 'digiquali@digiquali', '$conf->digiquali->enabled');
-                $extraFields->addExtraField('control_history_link', 'ControlHistoryLink', 'varchar', 110, 255, $tableElement, 0, 0, '', '', 0, '', 5, '','',0, 'digiquali@digiquali', '$conf->digiquali->enabled');
+                $extraFields->update('control_history_link', 'ControlHistoryLink', 'varchar', 255, $tableElement, 0, 0, 100, '', 0, '', 1, '', '', '', 0, 'digiquali@digiquali', '$conf->digiquali->enabled');
+                $extraFields->addExtraField('control_history_link', 'ControlHistoryLink', 'varchar', 100, 255, $tableElement, 0, 0, '', '', 0, '', 1, '','',0, 'digiquali@digiquali', '$conf->digiquali->enabled');
+                $extraFields->update('tiny_url_control_history_link', 'TinyUrlControlHistoryLink', 'url', 0, $tableElement, 0, 0, 120, '', 1, '', 1, 'TinyUrlControlHistoryLinkHelp', '', '', 0, 'digiquali@digiquali', '$conf->digiquali->enabled');
+                $extraFields->addExtraField('tiny_url_control_history_link', 'TinyUrlControlHistoryLink', 'url', 120, '', $tableElement, 0, 0, '', '', 1, '', 1, 'TinyUrlControlHistoryLinkHelp','',0, 'digiquali@digiquali', '$conf->tinyurl->enabled');
 			}
 		}
 

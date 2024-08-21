@@ -132,6 +132,29 @@ class ActionsDigiquali
             require_once __DIR__ . '/../class/survey.class.php';
 		}
 
+        require_once __DIR__ . '/../lib/digiquali_sheet.lib.php';
+
+        $linkableElements = get_sheet_linkable_objects();
+
+        if (!empty($linkableElements)) {
+            foreach($linkableElements as $linkableElement) {
+                if ($linkableElement['link_name'] == $object->element || $linkableElement['tab_type'] == $object->element) {
+                    if ($parameters['currentcontext'] == $linkableElement['hook_name_card']) {
+                        if ($action == 'set_tiny_url' && isModEnabled('tinyurl')) {
+                            $langs->load('tinyurl@tinyurl');
+
+                            require_once __DIR__ . '/../../TinyURL/lib/tinyurl_function.lib.php';
+
+                            set_tiny_url_link($object, GETPOST('url_type'));
+
+                            header('Location: ' . $_SERVER['PHP_SELF'] . '?id=' . $object->id);
+                            exit;
+                        }
+                    }
+                }
+            }
+        }
+
 		if (!$error) {
 			$this->results = array('myreturn' => 999);
 			$this->resprints = 'A text to show';
@@ -200,10 +223,32 @@ class ActionsDigiquali
 
         if (!empty($linkableElements)) {
             foreach($linkableElements as $linkableElement) {
-                if ($linkableElement['link_name'] == $object->element) {
-                    if (strpos($parameters['context'], $linkableElement['hook_name_card']) !== false) {
+                if ($linkableElement['link_name'] == $object->element || $linkableElement['tab_type'] == $object->element) {
+                    if ($parameters['currentcontext'] == $linkableElement['hook_name_card']) {
                         $picto            = img_picto('', 'fontawesome_fa-clipboard-check_fas_#d35968', 'class="pictofixedwidth"');
-                        $extrafieldsNames = ['qc_frequency', 'control_history_link'];
+                        $extrafieldsNames = ['qc_frequency', 'control_history_link', 'tiny_url_control_history_link'];
+                        if (isModEnabled('tinyurl')) {
+                            require_once __DIR__ . '/../../TinyURL/lib/tinyurl_function.lib.php';
+                            $urlTypes = ['control_history'];
+                            foreach ($urlTypes as $urlType) {
+                                $checkTinyUrlLink = get_tiny_url_link($object, $urlType);
+                                $jQueryElement    = '.' . $object->element . '_extras_tiny_url_' . $urlType . '_link';
+                                if ($checkTinyUrlLink == 0 && getDolGlobalInt('TINYURL_MANUAL_GENERATION')) {
+                                    $langs->load('tinyurl@tinyurl');
+                                    $output  = '<a class="reposition editfielda" href="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '&action=set_tiny_url&url_type=' . $urlType . '&token=' . newToken() . '">';
+                                    $output .= img_picto($langs->trans('SetTinyURLLink'), 'fontawesome_fa-redo_fas_#444', 'class="paddingright pictofixedwidth valignmiddle"') . '</a>';
+                                    $output .= '</span>' . img_picto($langs->trans('GetTinyURLErrors'), 'fontawesome_fa-exclamation-triangle_fas_#bc9526') . '</span>';
+                                }
+                                if (!empty($object->array_options['options_tiny_url_' . $urlType . '_link']) && $checkTinyUrlLink > 0) {
+                                    $output = showValueWithClipboardCPButton($object->array_options['options_tiny_url_' . $urlType . '_link'], 0, 'none');
+                                } ?>
+                                <script>
+                                    var objectElement = <?php echo "'" . $jQueryElement . "'"; ?>;
+                                    jQuery(objectElement).prepend(<?php echo json_encode($output); ?>);
+                                </script>
+                                <?php
+                            }
+                        }
                         foreach ($extrafieldsNames as $extrafieldsName) {
                             $jQueryElement = 'td.' . $object->element . '_extras_' . $extrafieldsName; ?>
                             <script>
@@ -214,7 +259,7 @@ class ActionsDigiquali
                         }
                     } elseif (preg_match('/' . $linkableElement['hook_name_list'] . '|projecttaskscard/', $parameters['context'])) {
                         $picto            = img_picto('', 'fontawesome_fa-clipboard-check_fas_#d35968', 'class="pictofixedwidth"');
-                        $extrafieldsNames = ['qc_frequency', 'control_history_link'];
+                        $extrafieldsNames = ['qc_frequency', 'control_history_link', 'tiny_url_control_history_link'];
                         foreach ($extrafieldsNames as $extrafieldsName) { ?>
                             <script>
                                 var objectElement = <?php echo "'" . $extrafieldsName . "'"; ?>;
@@ -413,5 +458,26 @@ class ActionsDigiquali
         }
 
         return 0; // or return 1 to replace standard code.
+    }
+
+    /**
+     * Overloading the tinyURLSetLink function : replacing the parent's function with the one below
+     *
+     * @param  array        $parameters Hook metadatas (context, etc...)
+     * @param  CommonObject $object     Current object
+     * @return int                      0 < on error, 0 on success, 1 to replace standard code
+     */
+    public function tinyURLSetLink(array $parameters, CommonObject $object): int
+    {
+        global $conf;
+
+        if (preg_match('/settinyurllinkcontrol_history/', $parameters['context'])) {
+            $objectB64                 = $object->array_options['options_control_history_link'];
+            $publicControlInterfaceUrl = dol_buildpath('custom/digiquali/public/control/public_control_history.php?track_id=' . $objectB64 . '&entity=' . $conf->entity, 3);
+            $this->resprints           = $publicControlInterfaceUrl;
+            return 1;
+        }
+
+        return 0; // or return 1 to replace standard code
     }
 }

@@ -115,11 +115,11 @@ class Sheet extends SaturneObject
         'date_creation'       => ['type' => 'datetime',     'label' => 'DateCreation',       'enabled' => 1, 'position' => 40,  'notnull' => 1, 'visible' => 2],
         'tms'                 => ['type' => 'timestamp',    'label' => 'DateModification',   'enabled' => 1, 'position' => 50,  'notnull' => 1, 'visible' => 0],
         'import_key'          => ['type' => 'varchar(14)',  'label' => 'ImportId',           'enabled' => 1, 'position' => 60,  'notnull' => 0, 'visible' => 0, 'index' => 0],
-        'status'              => ['type' => 'smallint',     'label' => 'Status',             'enabled' => 1, 'position' => 70,  'notnull' => 1, 'visible' => 1, 'index' => 1, 'default' =>1, 'arrayofkeyval' => ['specialCase' => 'InProgressAndLocked', 1 => 'InProgress', 2 => 'Locked', 3 => 'Archived'], 'css' => 'minwidth200'],
-        'type'                => ['type' => 'select',       'label' => 'Type',               'enabled' => 1, 'position' => 65,  'notnull' => 1, 'visible' => 1, 'arrayofkeyval' => ['control' => 'Control', 'survey' => 'Survey']],
+        'status'              => ['type' => 'smallint',     'label' => 'Status',             'enabled' => 1, 'position' => 70,  'notnull' => 1, 'visible' => 2, 'index' => 1, 'default' => 1, 'arrayofkeyval' => ['specialCase' => 'InProgressAndLocked', 1 => 'InProgress', 2 => 'Locked', 3 => 'Archived'], 'css' => 'minwidth200'],
+        'type'                => ['type' => 'select',       'label' => 'Type',               'enabled' => 1, 'position' => 65,  'notnull' => 1, 'visible' => 1, 'default' => 'control', 'arrayofkeyval' => ['control' => 'Control', 'survey' => 'Survey']],
         'label'               => ['type' => 'varchar(255)', 'label' => 'Label',              'enabled' => 1, 'position' => 11,  'notnull' => 1, 'visible' => 1, 'searchall' => 1, 'css' => 'minwidth200'],
         'description'         => ['type' => 'html',         'label' => 'Description',        'enabled' => 1, 'position' => 15,  'notnull' => 0, 'visible' => 1, 'searchall' => 1, 'css' => 'minwidth200'],
-        'element_linked'      => ['type' => 'text',         'label' => 'ElementLinked',      'enabled' => 1, 'position' => 90,  'notnull' => 0, 'visible' => 0],
+        'element_linked'      => ['type' => 'checkbox',     'label' => 'ElementType',        'enabled' => 1, 'position' => 90,  'notnull' => 1, 'visible' => 1, 'css' => 'minwidth200'],
         'photo'               => ['type' => 'text',         'label' => 'Photo',              'enabled' => 1, 'position' => 95,  'notnull' => 0, 'visible' => 0],
         'success_rate'        => ['type' => 'real',         'label' => 'SuccessScore',       'enabled' => 1, 'position' => 35,  'notnull' => 0, 'visible' => 2, 'help' => 'PercentageValue'],
         'mandatory_questions' => ['type' => 'text',         'label' => 'MandatoryQuestions', 'enabled' => 1, 'position' => 100, 'notnull' => 1, 'visible' => 0],
@@ -219,7 +219,18 @@ class Sheet extends SaturneObject
      */
     public function __construct(DoliDB $db)
     {
+        global $langs;
+
         parent::__construct($db, $this->module, $this->element);
+
+        require_once __DIR__ . '/../../digiquali/lib/digiquali_sheet.lib.php';
+
+        $objectsMetadata = get_sheet_linkable_objects();
+        foreach ($objectsMetadata as $objectType => $objectMetadata) {
+            if ($objectMetadata['conf'] > 0) {
+                $this->fields['element_linked']['arrayofkeyval'][$objectType] = img_picto('', $objectMetadata['picto'], 'class="pictofixedwidth"') . $langs->trans($objectMetadata['langs']);
+            }
+        }
     }
 
     /**

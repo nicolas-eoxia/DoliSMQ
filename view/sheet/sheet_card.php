@@ -144,17 +144,16 @@ if (empty($reshook)) {
 		exit;
 	}
 
-	if ($action == 'add' && $permissiontoadd && !$cancel) {
-		if (is_array(GETPOST('linked_object')) && !empty(GETPOST('linked_object'))) {
-			foreach (GETPOST('linked_object') as $linked_object_type) {
-				$showArray[$linked_object_type] = 1;
+	if ($action == 'add' && !empty($permissiontoadd)) {
+        $linkedElements = GETPOST('element_linked', 'array');
+		if (is_array(GETPOST('element_linked')) && !empty(GETPOST('element_linked'))) {
+			foreach ($linkedElements as $linkedElement) {
+				$showArray[$linkedElement] = 1;
 			}
-		} else {
+		} elseif (empty($linkedElement)) {
 			setEventMessages($langs->trans('NoLinkedObjectSelected'), null, 'errors');
-			if (dol_strlen(GETPOST('label')) > 0) {
-				header("Location: " . $_SERVER['PHP_SELF'] . '?action=create&label=' . GETPOST('label'));
-				exit;
-			}
+            header('Location: ' . $_SERVER['PHP_SELF'] . '?action=create');
+            exit();
 		}
 		$object->element_linked = json_encode($showArray);
 
@@ -331,82 +330,49 @@ saturne_header(1,'', $title, $help_url, '', 0, 0, $moreJS);
 
 // Part to create
 if ($action == 'create') {
-	print load_fiche_titre($langs->trans('NewSheet'), '', 'object_' . $object->picto);
+    if (empty($permissiontoadd)) {
+        accessforbidden($langs->trans('NotEnoughPermissions'), 0);
+        exit;
+    }
 
-	print '<form method="POST" action="'.$_SERVER["PHP_SELF"].'">';
-	print '<input type="hidden" name="token" value="'.newToken().'">';
-	print '<input type="hidden" name="action" value="add">';
-	if ($backtopage) print '<input type="hidden" name="backtopage" value="'.$backtopage.'">';
-	if ($backtopageforcancel) print '<input type="hidden" name="backtopageforcancel" value="'.$backtopageforcancel.'">';
+    print load_fiche_titre($langs->trans('New' . ucfirst($object->element)), '', 'object_' . $object->picto);
 
-	print dol_get_fiche_head();
+    print '<form method="POST" action="' . $_SERVER["PHP_SELF"] . '">';
+    print '<input type="hidden" name="token" value="' . newToken() . '">';
+    print '<input type="hidden" name="action" value="add">';
+    if (!empty($backtopage)) {
+        print '<input type="hidden" name="backtopage" value="' . $backtopage . '">';
+    }
 
-	print '<table class="border centpercent tableforfieldcreate sheet-table">'."\n";
+    print dol_get_fiche_head();
 
-	//Label -- Libellé
-	print '<tr><td class="fieldrequired">' . $langs->trans("Label") . '</td><td>';
-	print '<input class="flat" type="text" size="36" name="label" id="label" value="' . GETPOST('label') . '">';
-	print '</td></tr>';
+    print '<table class="border centpercent tableforfieldcreate">';
 
-	// Description -- Description
-	print '<tr><td class=""><label class="" for="description">' . $langs->trans("Description") . '</label></td><td>';
-	$doleditor = new DolEditor('description', GETPOST('description'), '', 90, 'dolibarr_details', '', false, true, $conf->global->FCKEDITOR_ENABLE_SOCIETE, ROWS_3, '90%');
-	$doleditor->Create();
-	print '</td></tr>';
+    if (!isset($object->fields['element_linked']['arrayofkeyval'])) {
+        $noticeMessage = '<a href="' . dol_buildpath('custom/digiquali/admin/sheet.php', 1) . '">' . $langs->transnoentities('MissingConfigElementTypeMessage') . '</a>';
+        print saturne_show_notice($langs->transnoentities('MissingConfigElementTypeTitle'), $noticeMessage, 'error', 'notice-infos', true);
+    }
 
-    // Type -- Type
-    print '<tr><td class="fieldrequired">' . $langs->trans('Type') . '</td><td>';
-    print $form::selectarray('type', $object->fields['type']['arrayofkeyval'], GETPOST('type'));
-    print '</td></tr>';
+    // Common attributes
+    require_once DOL_DOCUMENT_ROOT . '/core/tpl/commonfields_add.tpl.php';
 
-	//FK Element
-	$linkableObject = 0;
-	foreach ($elementArray as $key => $element) {
-		if (!empty($element['conf'])) {
-			print '<tr><td class="">' . img_picto('', $element['picto'], 'class="paddingrightonly"') . $langs->trans($element['langs']) . '</td><td>';
-			$linkedObjects = empty(GETPOST("linked_object")) ? [] : GETPOST("linked_object");
-			if ($conf->global->DIGIQUALI_SHEET_UNIQUE_LINKED_ELEMENT) {
-				print '<input type="radio" id="show_' . $key . '" name="linked_object[]" value="'.$key.'" '. (in_array($key, $linkedObjects) ? 'checked' : '') .'>';
-			} else {
-				print '<input type="checkbox" id="show_' . $key . '" name="linked_object[]" value="'.$key.'" '. (in_array($key, $linkedObjects) ? 'checked' : '') .'>';
-			}
-			print '</td></tr>';
-			$linkableObject++;
-		}
-	}
+    // Other attributes
+    include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
 
-	if ($linkableObject == 0) {
-		print '<div class="wpeo-notice notice-warning notice-red">';
-		print '<div class="notice-content">';
-		print '<a href="' . dol_buildpath('/custom/digiquali/admin/sheet.php', 2) . '">' . '<b><div class="notice-subtitle">'.$langs->trans("ConfigElementLinked") . ' : ' . $langs->trans('ConfigSheet') . '</b></a>';
-		print '</div>';
-		print '</div>';
-		print '</div>';
-	}
-
-	if (!empty($conf->categorie->enabled)) {
-		// Categories
-		print '<tr><td>'.$langs->trans("Categories").'</td><td>';
-		$cate_arbo = $form->select_all_categories('sheet', '', 'parent', 64, 0, 1);
-		print img_picto('', 'category', 'class="pictofixedwidth"').$form::multiselectarray('categories', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'minwidth100imp maxwidth500 widthcentpercentminusxx');
+    if (!empty($conf->categorie->enabled)) {
+        // Categories
+        print '<tr><td>'.$langs->trans("Categories").'</td><td>';
+        $cate_arbo = $form->select_all_categories('sheet', '', 'parent', 64, 0, 1);
+        print img_picto('', 'category', 'class="pictofixedwidth"').$form::multiselectarray('categories', $cate_arbo, GETPOST('categories', 'array'), '', 0, 'minwidth100imp maxwidth500 widthcentpercentminusxx');
         print '<a class="butActionNew" href="' . DOL_URL_ROOT . '/categories/index.php?type=sheet&backtopage=' . urlencode($_SERVER['PHP_SELF'] . '?action=create') . '" target="_blank"><span class="fa fa-plus-circle valignmiddle paddingleft" title="' . $langs->trans('AddCategories') . '"></span></a>';
-		print "</td></tr>";
-	}
+        print "</td></tr>";
+    }
 
-	// Other attributes
-	include DOL_DOCUMENT_ROOT.'/core/tpl/extrafields_add.tpl.php';
+    print '</table>';
 
-	print '</table>';
+    print dol_get_fiche_end();
 
-	print dol_get_fiche_end();
-
-	print '<div class="center">';
-	print '<input type="submit" class="button wpeo-button" name="add" value="'.dol_escape_htmltag($langs->trans("Create")).'">';
-	print '&nbsp; ';
-	print '<input type="'.($backtopage ? "submit" : "button").'" class="button button-cancel" name="cancel" value="'.dol_escape_htmltag($langs->trans("Cancel")).'"'.($backtopage ? '' : ' onclick="javascript:history.go(-1)"').'>'; // Cancel for create does not post form if we don't know the backtopage
-	print '</div>';
-
-	print '</form>';
+    print $form->buttonsSaveCancel();
 }
 
 // Part to edit record

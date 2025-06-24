@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2022-2024 EVARISK <technique@evarisk.com>
+/* Copyright (C) 2022-2025 EVARISK <technique@evarisk.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -18,7 +18,7 @@
 /**
  * \file    view/sheet/sheet_export.php
  * \ingroup digiquali
- * \brief   Page to export sheet and linked questions on sheet
+ * \brief   Page to export sheet and linked element (question/questiongroup) on sheet
  */
 
 // Load DigiQuali environment
@@ -35,8 +35,6 @@ require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
 
 // Load DigiQuali libraries
 require_once __DIR__ . '/../../class/sheet.class.php';
-require_once __DIR__ . '/../../class/question.class.php';
-require_once __DIR__ . '/../../class/questiongroup.class.php';
 require_once __DIR__ . '/../../class/answer.class.php';
 require_once __DIR__ . '/../../lib/digiquali_sheet.lib.php';
 
@@ -47,26 +45,26 @@ global $conf, $db, $hookmanager, $langs, $user;
 saturne_load_langs();
 
 // Get parameters
-$id     = GETPOST('id', 'int');
+$id     = GETPOSTINT('id');
 $ref    = GETPOST('ref', 'alpha');
 $action = GETPOST('action', 'aZ09');
 
 // Initialize technical objects
-$object        = new Sheet($db);
-$question      = new Question($db);
-$questionGroup = new QuestionGroup($db);
-$answer   = new Answer($db);
+$object = new Sheet($db);
+$answer = new Answer($db);
 
-$hookmanager->initHooks(['sheetexport', 'globalcard']); // Note that conf->hooks_modules contains array
+$hookmanager->initHooks([$object->element . 'export', 'globalcard']); // Note that conf->hooks_modules contains array
 
 // Load object
-require_once DOL_DOCUMENT_ROOT . '/core/actions_fetchobject.inc.php'; // Must be included, not include_once
+require_once DOL_DOCUMENT_ROOT . '/core/actions_fetchobject.inc.php';
 
-$upload_dir = $conf->digiquali->multidir_output[$conf->entity ?? 1];
+$upload_dir = getMultidirOutput($object, $object->module);
 
-// Security check - Protection if external user
-$permissionToRead = $user->hasRight('digiquali', 'sheet', 'read');
-$permissionToAdd  = $user->hasRight('digiquali', 'sheet', 'write');
+// Permissions
+$permissionToRead = $user->hasRight($object->module, $object->element, 'read');
+$permissionToAdd  = $user->hasRight($object->module, $object->element, 'write');
+
+// Security check
 saturne_check_access($permissionToRead, $object);
 
 /*
@@ -80,67 +78,48 @@ if ($resHook < 0) {
 }
 
 if (empty($resHook)) {
-    if ($action == 'export_sheet' && $permissionToAdd) {
+    if ($action == 'export' && $permissionToAdd) {
         $digiqualiExportArray = [];
-        $sheetExportArray['rowid']               = $object->id;
-        $sheetExportArray['ref']                 = $object->ref;
-        $sheetExportArray['status']              = $object->status;
-        $sheetExportArray['type']                = $object->type;
-        $sheetExportArray['label']               = $object->label;
-        $sheetExportArray['description']         = $object->description;
-        $sheetExportArray['element_linked']      = $object->element_linked;
-        $sheetExportArray['success_rate']        = $object->success_rate;
-        $sheetExportArray['mandatory_questions'] = $object->mandatory_questions;
-
-        $digiqualiExportArray['sheets'][$object->id] = $sheetExportArray;
+        $sheetExportArray     = [];
+        foreach ($object->fields as $key => $val) {
+            if (!empty($val['export'])) {
+                $sheetExportArray[$key] = $object->{$key};
+            }
+        }
+        $digiqualiExportArray[$object->element][$object->id] = $sheetExportArray;
 
         $questionsAndGroupsLinked = $object->fetchQuestionsAndGroups();
+        if (empty($questionsAndGroupsLinked)) {
+            setEventMessages($langs->transnoentities('NoQuestionOrQuestionGroupLinked'), [], 'warnings');
+        }
 
-        if (is_array($questionsAndGroupsLinked) && !empty($questionsAndGroupsLinked)) {
-            foreach ($questionsAndGroupsLinked as $key => $questionOrGroupSingle) {
-                if ($questionOrGroupSingle->element == 'question') {
-                    $questionSingle = $questionOrGroupSingle;
-                    $digiqualiExportArray['element_element_questions'][$object->id][$key] = $questionSingle->id;
-                    $questionExportArray['rowid']                               = $questionSingle->id;
-                    $questionExportArray['ref']                                 = $questionSingle->ref;
-                    $questionExportArray['status']                              = $questionSingle->status;
-                    $questionExportArray['type']                                = $questionSingle->type;
-                    $questionExportArray['label']                               = $questionSingle->label;
-                    $questionExportArray['description']                         = $questionSingle->description;
-                    $questionExportArray['show_photo']                          = $questionSingle->show_photo;
-                    $questionExportArray['authorize_answer_photo']              = $questionSingle->authorize_answer_photo;
-                    $questionExportArray['enter_comment']                       = $questionSingle->enter_comment;
-
-                    $digiqualiExportArray['questions'][$questionSingle->id] = $questionExportArray;
-
-                    $answerList = $answer->fetchAll('ASC', 'position', 0, 0, ['fk_question' => $questionSingle->id]);
-
-                    if (is_array($answerList) && !empty($answerList)) {
-                        foreach ($answerList as $answerSingle) {
-                            $answerExportArray['rowid']       = $answerSingle->id;
-                            $answerExportArray['ref']         = $answerSingle->ref;
-                            $answerExportArray['status']      = $answerSingle->status;
-                            $answerExportArray['value']       = $answerSingle->value;
-                            $answerExportArray['position']    = $answerSingle->position;
-                            $answerExportArray['pictogram']   = $answerSingle->pictogram;
-                            $answerExportArray['color']       = $answerSingle->color;
-                            $answerExportArray['fk_question'] = $answerSingle->fk_question;
-
-                            $digiqualiExportArray['questions'][$answerSingle->fk_question]['answers'][$answerSingle->id] = $answerExportArray;
-                        }
-                    }
-                } else if ($questionOrGroupSingle->element == 'questiongroup') {
-                    $questionGroupSingle = $questionOrGroupSingle;
-                    $digiqualiExportArray['element_element_questiongroups'][$object->id][$key] = $questionGroupSingle->id;
-                    $questionGroupExportArray['rowid']       = $questionGroupSingle->id;
-                    $questionGroupExportArray['ref']         = $questionGroupSingle->ref;
-                    $questionGroupExportArray['status']      = $questionGroupSingle->status;
-                    $questionGroupExportArray['label']       = $questionGroupSingle->label;
-                    $questionGroupExportArray['description'] = $questionGroupSingle->description;
-
-                    $digiqualiExportArray['questiongroups'][$questionGroupSingle->id] = $questionGroupExportArray;
+        foreach ($questionsAndGroupsLinked as $questionOrGroupSingle) {
+            $digiqualiExportArray[$questionOrGroupSingle->module . '_' . $questionOrGroupSingle->element][$object->id][] = $questionOrGroupSingle->id;
+            $questionExportArray = [];
+            foreach ($questionOrGroupSingle->fields as $key => $val) {
+                if (!empty($val['export'])) {
+                    $questionExportArray[$key] = $questionOrGroupSingle->{$key};
                 }
+            }
+            $digiqualiExportArray[$questionOrGroupSingle->element][$questionOrGroupSingle->id] = $questionExportArray;
 
+            if ($questionOrGroupSingle->element != 'question') {
+                continue;
+            }
+
+            $answers = $answer->fetchAll('ASC', 'position', 0, 0, ['fk_question' => $questionOrGroupSingle->id]);
+            if (!is_array($answers) || empty($answers)) {
+                continue;
+            }
+
+            foreach ($answers as $answerSingle) {
+                $answerExportArray = [];
+                foreach ($answerSingle->fields as $key => $val) {
+                    if (!empty($val['export'])) {
+                        $answerExportArray[$key] = $answerSingle->{$key};
+                    }
+                }
+                $digiqualiExportArray[$questionOrGroupSingle->element][$answerSingle->fk_question][$answerSingle->element][$answerSingle->id] = $answerExportArray;
             }
         }
 
@@ -182,7 +161,7 @@ if (empty($resHook)) {
  * View
  */
 
-$title   = $langs->trans('Export', 'DigiQuali');
+$title   = $langs->trans('Export');
 $helpUrl = 'FR:Module_DigiQuali';
 
 saturne_header(0,'', $title, $helpUrl);
@@ -196,7 +175,7 @@ print load_fiche_titre($langs->trans('ExportSheetData'), '', '');
 
 print '<form name="export_sheet_data" action="' . $_SERVER['PHP_SELF'] . '?id=' . $object->id . '" method="POST">';
 print '<input type="hidden" name="token" value="' . newToken() . '">';
-print '<input type="hidden" name="action" value="export_sheet">';
+print '<input type="hidden" name="action" value="export">';
 
 print '<table class="noborder centpercent">';
 print '<tr class="liste_titre">';

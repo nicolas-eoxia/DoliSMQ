@@ -109,15 +109,15 @@ class QuestionGroup extends SaturneObject
      */
 	public $fields = [
         'rowid'                  => ['type' => 'integer',      'label' => 'TechnicalID',          'enabled' => 1, 'position' => 1,   'notnull' => 1, 'visible' => 0, 'noteditable' => 1, 'index' => 1],
-        'ref'                    => ['type' => 'varchar(128)', 'label' => 'Ref',                  'enabled' => 1, 'position' => 10,  'notnull' => 1, 'visible' => 4, 'noteditable' => 1, 'default' => '(PROV)', 'index' => 1, 'searchall' => 1, 'showoncombobox' => 1, 'validate' => 1],
+        'ref'                    => ['type' => 'varchar(128)', 'label' => 'Ref',                  'enabled' => 1, 'position' => 10,  'notnull' => 1, 'visible' => 4, 'noteditable' => 1, 'default' => '(PROV)', 'index' => 1, 'searchall' => 1, 'showoncombobox' => 1, 'validate' => 1, 'export' => 1],
         'ref_ext'                => ['type' => 'varchar(128)', 'label' => 'RefExt',               'enabled' => 1, 'position' => 20,  'notnull' => 0, 'visible' => 0, 'noteditable' => 1, 'index' => 1],
         'entity'                 => ['type' => 'integer',      'label' => 'Entity',               'enabled' => 1, 'position' => 30,  'notnull' => 1, 'visible' => 0, 'noteditable' => 1, 'default' => 1, 'index' => 1],
         'date_creation'          => ['type' => 'datetime',     'label' => 'DateCreation',         'enabled' => 1, 'position' => 40,  'notnull' => 1, 'visible' => 0, 'noteditable' => 1, 'default' => 'CURRENT_TIMESTAMP', 'index' => 1],
         'tms'                    => ['type' => 'timestamp',    'label' => 'DateModification',     'enabled' => 1, 'position' => 50,  'notnull' => 1, 'visible' => 0, 'noteditable' => 1, 'default' => 'CURRENT_TIMESTAMP', 'index' => 1],
         'import_key'             => ['type' => 'varchar(14)',  'label' => 'ImportKey',            'enabled' => 1, 'position' => 60,  'notnull' => 0, 'visible' => 0, 'noteditable' => 1, 'index' => 1],
-        'status'                 => ['type' => 'integer',      'label' => 'Status',               'enabled' => 1, 'position' => 70,  'notnull' => 1, 'visible' => 0, 'noteditable' => 1, 'default' => 1, 'index' => 1],
-        'label'                  => ['type' => 'varchar(255)', 'label' => 'Label',                'enabled' => 1, 'position' => 80,  'notnull' => 1, 'visible' => 1, 'noteditable' => 0, 'index' => 1],
-        'description'            => ['type' => 'text',         'label' => 'Description',          'enabled' => 1, 'position' => 90,  'notnull' => 0, 'visible' => 1, 'noteditable' => 0],
+        'status'                 => ['type' => 'integer',      'label' => 'Status',               'enabled' => 1, 'position' => 70,  'notnull' => 1, 'visible' => 0, 'noteditable' => 1, 'default' => 1, 'index' => 1, 'export' => 1],
+        'label'                  => ['type' => 'varchar(255)', 'label' => 'Label',                'enabled' => 1, 'position' => 80,  'notnull' => 1, 'visible' => 1, 'noteditable' => 0, 'index' => 1, 'export' => 1],
+        'description'            => ['type' => 'text',         'label' => 'Description',          'enabled' => 1, 'position' => 90,  'notnull' => 0, 'visible' => 1, 'noteditable' => 0, 'export' => 1],
         'fk_user_creat'          => ['type' => 'integer',      'label' => 'UserCreation',         'enabled' => 1, 'position' => 100, 'notnull' => 1, 'visible' => 0, 'noteditable' => 1, 'index' => 1],
         'fk_user_modif'          => ['type' => 'integer',      'label' => 'UserModification',     'enabled' => 1, 'position' => 110, 'notnull' => 0, 'visible' => 0, 'noteditable' => 1, 'index' => 1],
     ];

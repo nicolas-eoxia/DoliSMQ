@@ -644,7 +644,51 @@ class Sheet extends SaturneObject
         return $questionAndGroups;
 
     }
-	/**
+
+    public function export()
+    {
+        global $langs;
+
+        require_once __DIR__ . '/answer.class.php';
+
+        $answer = new Answer($this->db);
+
+        $array       = [];
+        $sheetExport = [];
+        foreach ($this->fields as $key => $val) {
+            if (!empty($val['export'])) {
+                $sheetExport[$key] = $this->{$key};
+            }
+        }
+        $array[$this->element][$this->id] = $sheetExport;
+
+        $questionsAndGroupsLinked = $this->fetchQuestionsAndGroups();
+        if (empty($questionsAndGroupsLinked)) {
+            $this->error = $langs->transnoentities('NoQuestionOrQuestionGroupLinked');
+            return -1;
+        }
+
+        foreach ($questionsAndGroupsLinked as $questionOrGroup) {
+            $array[$questionOrGroup->module . '_' . $questionOrGroup->element][$this->id][] = $questionOrGroup->id;
+            $questionExport = [];
+            foreach ($questionOrGroup->fields as $key => $val) {
+                if (!empty($val['export'])) {
+                    $questionExport[$key] = $questionOrGroup->{$key};
+                }
+            }
+            $array[$questionOrGroup->element][$questionOrGroup->id] = $questionExport;
+
+            if ($questionOrGroup->element != 'question') {
+                continue;
+            }
+
+            $array[$questionOrGroup->element][$questionOrGroup->id] = array_merge($questionExport, $answer->export($questionOrGroup));
+        }
+
+        return $array;
+    }
+
+    /**
 	 * Write information of trigger description
 	 *
 	 * @param  Object $object Object calling the trigger

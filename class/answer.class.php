@@ -242,6 +242,30 @@ class Answer extends SaturneObject
         }
     }
 
+    public function export($question)
+    {
+        global $langs;
+
+        $array   = [];
+        $answers = $this->fetchAll('ASC', 'position', 0, 0, ['fk_question' => $question->id]);
+        if (!is_array($answers) || empty($answers)) {
+            $this->error = $langs->transnoentities('ObjectNotFound', img_picto('', $this->picto, 'class="paddingrightonly"') . $langs->transnoentities(ucfirst($this->element)));
+            return -1;
+        }
+
+        foreach ($answers as $answer) {
+            $answerExport = [];
+            foreach ($answer->fields as $key => $val) {
+                if (!empty($val['export'])) {
+                    $answerExport[$key] = $answer->{$key};
+                }
+            }
+            $array[$answer->element][$answer->id] = $answerExport;
+        }
+
+        return $array;
+    }
+
 	/**
 	 * Write information of trigger description
 	 *

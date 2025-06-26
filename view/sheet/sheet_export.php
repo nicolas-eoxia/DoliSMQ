@@ -34,9 +34,9 @@ if (file_exists('../digiquali.main.inc.php')) {
 require_once DOL_DOCUMENT_ROOT . '/core/lib/files.lib.php';
 
 // Load DigiQuali libraries
+require_once __DIR__ . '/../../lib/digiquali_sheet.lib.php';
 require_once __DIR__ . '/../../class/sheet.class.php';
 require_once __DIR__ . '/../../class/answer.class.php';
-require_once __DIR__ . '/../../lib/digiquali_sheet.lib.php';
 
 // Global variables definitions
 global $conf, $db, $hookmanager, $langs, $user;
@@ -79,49 +79,7 @@ if ($resHook < 0) {
 
 if (empty($resHook)) {
     if ($action == 'export' && $permissionToAdd) {
-        $digiqualiExportArray = [];
-        $sheetExportArray     = [];
-        foreach ($object->fields as $key => $val) {
-            if (!empty($val['export'])) {
-                $sheetExportArray[$key] = $object->{$key};
-            }
-        }
-        $digiqualiExportArray[$object->element][$object->id] = $sheetExportArray;
-
-        $questionsAndGroupsLinked = $object->fetchQuestionsAndGroups();
-        if (empty($questionsAndGroupsLinked)) {
-            setEventMessages($langs->transnoentities('NoQuestionOrQuestionGroupLinked'), [], 'warnings');
-        }
-
-        foreach ($questionsAndGroupsLinked as $questionOrGroupSingle) {
-            $digiqualiExportArray[$questionOrGroupSingle->module . '_' . $questionOrGroupSingle->element][$object->id][] = $questionOrGroupSingle->id;
-            $questionExportArray = [];
-            foreach ($questionOrGroupSingle->fields as $key => $val) {
-                if (!empty($val['export'])) {
-                    $questionExportArray[$key] = $questionOrGroupSingle->{$key};
-                }
-            }
-            $digiqualiExportArray[$questionOrGroupSingle->element][$questionOrGroupSingle->id] = $questionExportArray;
-
-            if ($questionOrGroupSingle->element != 'question') {
-                continue;
-            }
-
-            $answers = $answer->fetchAll('ASC', 'position', 0, 0, ['fk_question' => $questionOrGroupSingle->id]);
-            if (!is_array($answers) || empty($answers)) {
-                continue;
-            }
-
-            foreach ($answers as $answerSingle) {
-                $answerExportArray = [];
-                foreach ($answerSingle->fields as $key => $val) {
-                    if (!empty($val['export'])) {
-                        $answerExportArray[$key] = $answerSingle->{$key};
-                    }
-                }
-                $digiqualiExportArray[$questionOrGroupSingle->element][$answerSingle->fk_question][$answerSingle->element][$answerSingle->id] = $answerExportArray;
-            }
-        }
+        $digiqualiExportArray = $object->export();
 
         $fileDir    = $upload_dir . '/temp/';
         $exportName = str_replace(' ', '_', (!empty($object->label) ? $object->label : $object->ref));
@@ -132,7 +90,7 @@ if (empty($resHook)) {
             dol_mkdir($fileDir);
         }
 
-        file_put_contents($fullName, json_encode($digiqualiExportArray));
+        file_put_contents($fullName, json_encode($digiqualiExportArray, JSON_PRETTY_PRINT));
 
         $zip = new ZipArchive();
         $zipFileName = $fileDir . $fileName . '.zip';
@@ -141,7 +99,7 @@ if (empty($resHook)) {
             $zip->addFile($fullName, basename($fullName));
             $zip->close();
 
-            $filepath = DOL_URL_ROOT . '/document.php?modulepart=digiquali&file=' . urlencode('temp/' . $fileName . '.zip');
+            $filepath = DOL_URL_ROOT . '/document.php?modulepart=' . $object->module . '&file=' . urlencode('temp/' . $fileName . '.zip');
             ?>
             <script>
                 const alink = document.createElement('a');

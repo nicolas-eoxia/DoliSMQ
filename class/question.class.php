@@ -624,6 +624,34 @@ class Question extends SaturneObject
 		}
 	}
 
+    public function export()
+    {
+        global $langs;
+
+        require_once __DIR__ . '/answer.class.php';
+
+        $answer = new Answer($this->db);
+
+        $array     = [];
+        $questions = $this->fetchAll();
+        if (!is_array($questions) || empty($questions)) {
+            $this->error = $langs->transnoentities('ObjectNotFound', img_picto('', $this->picto, 'class="paddingrightonly"') . $langs->transnoentities(ucfirst($this->element)));
+            return -1;
+        }
+
+        foreach ($questions as $question) {
+            $questionExport = [];
+            foreach ($question->fields as $key => $val) {
+                if (!empty($val['export'])) {
+                    $questionExport[$key] = $question->{$key};
+                }
+            }
+            $array[$question->element][$question->id] = array_merge($questionExport, $answer->export($question));
+        }
+
+        return $array;
+    }
+
 	/**
 	 * Write information of trigger description
 	 *

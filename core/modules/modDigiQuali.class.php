@@ -1,5 +1,5 @@
 <?php
-/* Copyright (C) 2022 EVARISK <technique@evarisk.com>
+/* Copyright (C) 2022-2025 EVARISK <technique@evarisk.com>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,111 +16,99 @@
  */
 
 /**
- * 	\defgroup   digiquali     Module DigiQuali
- *  \brief      DigiQuali module descriptor.
+ * \defgroup digiquali Module DigiQuali
+ * \brief    DigiQuali module descriptor
  *
- *  \file       core/modules/modDigiQuali.class.php
- *  \ingroup    digiquali
- *  \brief      Description and activation file for module DigiQuali
+ * \file    core/modules/modDigiQuali.class.php
+ * \ingroup digiquali
+ * \brief   Description and activation file for module DigiQuali
  */
-include_once DOL_DOCUMENT_ROOT.'/core/modules/DolibarrModules.class.php';
+
+// Load Dolibarr libraries
+require_once DOL_DOCUMENT_ROOT . '/core/modules/DolibarrModules.class.php';
 
 /**
- *  Description and activation class for module DigiQuali
+ * Description and activation class for module DigiQuali
  */
 class modDigiQuali extends DolibarrModules
 {
-	/**
-	 * Constructor. Define names, constants, directories, boxes, permissions
-	 *
-	 * @param DoliDB $db Database handler
-	 */
-	public function __construct($db)
-	{
-		global $conf, $langs;
+    /**
+     * Constructor. Define names, constants, directories, boxes, permissions
+     *
+     * @param  DoliDB $db Database handler
+     * @throws Exception
+     */
+    public function __construct($db)
+    {
+        global $conf, $langs;
 
-		$this->db = $db;
+        parent::__construct($db);
 
-		if (file_exists(__DIR__ . '/../../../saturne/lib/saturne_functions.lib.php')) {
-			require_once __DIR__ . '/../../../saturne/lib/saturne_functions.lib.php';
-			saturne_load_langs(['digiquali@digiquali']);
-		} else {
-			$this->error++;
-			$this->errors[] = $langs->trans('activateModuleDependNotSatisfied', 'DigiQuali', 'Saturne');
-		}
+        if (file_exists(__DIR__ . '/../../../saturne/lib/saturne_functions.lib.php')) {
+            require_once __DIR__ . '/../../../saturne/lib/saturne_functions.lib.php';
+            saturne_load_langs(['digiquali@digiquali']);
+        } else {
+            $this->error++;
+            $this->errors[] = $langs->trans('activateModuleDependNotSatisfied', 'DigiQuali', 'Saturne');
+        }
 
-		// Id for module (must be unique).
-		$this->numero = 436301;
+        // ID for module (must be unique)
+        $this->numero = 436301;
 
-		// Key text used to identify module (for permissions, menus, etc...)
-		$this->rights_class = 'digiquali';
+        // Key text used to identify module (for permissions, menus, etc...)
+        $this->rights_class = 'digiquali';
 
-		// Family can be 'base' (core modules),'crm','financial','hr','projects','products','ecm','technic' (transverse modules),'interface' (link with external tools),'other','...'
-		// It is used to group modules by family in module setup page
-		$this->family = '';
+        // Family can be 'base' (core modules),'crm','financial','hr','projects','products','ecm','technic' (transverse modules),'interface' (link with external tools),'other','...'
+        // It is used to group modules by family in module setup page
+        $this->family = 'evarisk';
 
-		// Module position in the family on 2 digits ('01', '10', '20', ...)
-		$this->module_position = '';
+        // Module position in the family on 2 digits ('01', '10', '20', ...)
+        $this->module_position = '02';
 
-		// Gives the possibility for the module, to provide his own family info and position of this family (Overwrite $this->family and $this->module_position. Avoid this)
-		$this->familyinfo = ['Evarisk' => ['position' => '01', 'label' => $langs->trans('Evarisk')]];
-		// Module label (no space allowed), used if translation string 'ModuleDigiQualiName' not found (DigiQuali is name of module).
-		$this->name = preg_replace('/^mod/i', '', get_class($this));
+        // Gives the possibility for the module, to provide his own family info and position of this family (Overwrite $this->family and $this->module_position. Avoid this)
+        $this->familyinfo = ['Evarisk' => ['position' => '01', 'label' => $langs->trans('Evarisk')]];
+        // Module label (no space allowed), used if translation string 'ModuleMyModuleName' not found (MyModule is name of module).
+        $this->name = preg_replace('/^mod/i', '', get_class($this));
 
-		// Module description, used if translation string 'ModuleDigiQualiDesc' not found (DigiQuali is name of module).
-		$this->description = $langs->trans('DigiQualiDescription');
-		// Used only if file README.md and README-LL.md not found.
-		$this->descriptionlong = $langs->trans('DigiQualiDescriptionLong');
+        // DESCRIPTION_FLAG
+        // Module description, used if translation string 'ModuleMyModuleDesc' not found (MyModule is name of module)
+        $this->description = $langs->trans($this->name . 'Description');
+        // Used only if file README.md and README-LL.md not found
+        $this->descriptionlong = $langs->trans($this->name . 'DescriptionLong');
 
-		// Author
-		$this->editor_name = 'Evarisk';
-		$this->editor_url = 'https://evarisk.com/';
+        // Author
+        $this->editor_name          = 'Evarisk';
+        $this->editor_url           = 'https://evarisk.com/'; // Must be an external online website
+        $this->editor_squarred_logo = '';                     // Must be image filename into the module/img directory followed with @modulename. Example: 'myimage.png@mymodule'
 
-		// Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated' or a version string like 'x.y.z'
-		$this->version = '21.2.0';
-		// Url to the file with your last numberversion of this module
-		//$this->url_last_version = 'http://www.example.com/versionmodule.txt';
+        // Possible values for version are: 'development', 'experimental', 'dolibarr', 'dolibarr_deprecated', 'experimental_deprecated' or a version string like 'x.y.z'
+        $this->version = trim(file_get_contents(__DIR__ . '/../../VERSION'));
+        // Url to the file with your last number version of this module
+        $this->url_last_version = 'https://github.com/Evarisk/digiquali/blob/main/VERSION';
 
-		// Key used in llx_const table to save module status enabled/disabled (where DIGIQUALI is value of property name of module in uppercase)
-		$this->const_name = 'MAIN_MODULE_'.strtoupper($this->name);
+        // Key used in llx_const table to save module status enabled/disabled (where MYMODULE is value of property name of module in uppercase)
+        $this->const_name = 'MAIN_MODULE_' . strtoupper($this->name);
 
-		// Name of image file used for this module.
-		// If file is in theme/yourtheme/img directory under name object_pictovalue.png, use this->picto='pictovalue'
-		// If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
-		// To use a supported fa-xxx css style of font awesome, use this->picto='xxx'
-		$this->picto = 'digiquali_color@digiquali';
+        // Name of image file used for this module
+        // If file is in theme/yourtheme/img directory under name object_pictovalue.png, use this->picto='pictovalue'
+        // If file is in module/img directory under name object_pictovalue.png, use this->picto='pictovalue@module'
+        // To use a supported fa-xxx css style of font awesome, use this->picto='xxx'
+        $this->picto = $this->rights_class . '_color@' . $this->rights_class;
 
-		// Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
-		$this->module_parts = [
-			// Set this to 1 if module has its own trigger directory (core/triggers)
-			'triggers' => 1,
-			// Set this to 1 if module has its own login method file (core/login)
-			'login' => 0,
-			// Set this to 1 if module has its own substitution function file (core/substitutions)
-			'substitutions' => 1,
-			// Set this to 1 if module has its own menus handler directory (core/menus)
-			'menus' => 0,
-			// Set this to 1 if module overwrite template dir (core/tpl)
-			'tpl' => 0,
-			// Set this to 1 if module has its own barcode directory (core/modules/barcode)
-			'barcode' => 0,
-			// Set this to 1 if module has its own models' directory (core/modules/xxx)
-			'models' => 1,
-			// Set this to 1 if module has its own printing directory (core/modules/printing)
-			'printing' => 0,
-			// Set this to 1 if module has its own theme directory (theme)
-			'theme' => 0,
-			// Set this to relative path of css file if module has its own css file
-			'css' => [],
-			// Set this to relative path of js file if module must load a js on all pages
-			'js' => [
-				//   '/digiquali/js/digiquali.js',
-			],
-			// Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
-			'hooks' => [
-				'category',
-				'categoryindex',
-				'mainloginpage',
+        // Define some features supported by module (triggers, login, substitutions, menus, css, etc...)
+        $this->module_parts = [
+            // Set this to 1 if module has its own trigger directory (core/triggers)
+            'triggers' => 1,
+            // Set this to 1 if module has its own substitution function file (core/substitutions)
+            'substitutions' => 1,
+            // Set this to 1 if module has its own models' directory (core/modules/xxx)
+            'models' => 1,
+            // Set here all hooks context managed by module. To find available hook context, make a "grep -r '>initHooks(' *" on source code. You can also set hook context to 'all'
+            /* BEGIN MODULEBUILDER HOOKSCONTEXTS */
+            'hooks' => [
+                'category',
+                'categoryindex',
+                'mainloginpage',
                 'controlcard',
                 'publiccontrol',
                 'publicsurvey',
@@ -129,85 +117,68 @@ class modDigiQuali extends DolibarrModules
                 'main',
                 'controladmin',
                 'surveyadmin',
-			],
-			// Set this to 1 if features of module are opened to external users
-			'moduleforexternal' => 0,
-		];
+            ],
+            /* END MODULEBUILDER HOOKSCONTEXTS */
+        ];
 
-		// Data directories to create when module is enabled.
-		// Example: this->dirs = array("/digiquali/temp","/digiquali/subdir");
-		$this->dirs = [
-			'/digiquali/temp',
-			'/digiquali/question',
-			'/ecm/digiquali',
-			'/ecm/digiquali/medias',
-			'/ecm/digiquali/controldocument',
-			'/ecm/digiquali/surveydocument'
-		];
+        // Data directories to create when module is enabled
+        $this->dirs = [
+            '/digiquali/temp',
+            '/digiquali/question',
+            '/ecm/digiquali',
+            '/ecm/digiquali/medias',
+            '/ecm/digiquali/controldocument',
+            '/ecm/digiquali/surveydocument'
+        ];
 
-		// Config pages. Put here list of php page, stored into digiquali/admin directory, to use to set up module.
-		$this->config_page_url = ['setup.php@digiquali'];
+        // Config pages. Put here list of php page, stored into mymodule/admin directory, to use to set up module
+        $this->config_page_url = ['setup.php@' . $this->rights_class];
 
-		// Dependencies
-		// A condition to hide module
-		$this->hidden = false;
-		// List of module class names as string that must be enabled if this module is enabled. Example: array('always1'=>'modModuleToEnable1','always2'=>'modModuleToEnable2', 'FR1'=>'modModuleToEnableFR'...)
-		$this->depends = ['modFckeditor', 'modProduct', 'modProductBatch', 'modECM', 'modProjet', 'modCategorie', 'modSaturne', 'modTicket', 'modCron'];
-		$this->requiredby = []; // List of module class names as string to disable if this one is disabled. Example: array('modModuleToDisable1', ...)
-		$this->conflictwith = []; // List of module class names as string this module is in conflict with. Example: array('modModuleToDisable1', ...)
+        // Dependencies
+        // A condition to hide module
+        $this->hidden = getDolGlobalInt('MODULE_' . strtoupper($this->name) . '_DISABLED'); // A condition to disable module;
+        // List of module class names that must be enabled if this module is enabled. Example: array('always'=>array('modModuleToEnable1','modModuleToEnable2'), 'FR'=>array('modModuleToEnableFR')...)
+        $this->depends = ['modFckeditor', 'modProduct', 'modProductBatch', 'modECM', 'modProjet', 'modCategorie', 'modSaturne', 'modTicket', 'modCron'];
+        // List of module class names to disable if this one is disabled. Example: array('modModuleToDisable1', ...)
+        $this->requiredby = [];
+        // List of module class names this module is in conflict with. Example: array('modModuleToDisable1', ...)
+        $this->conflictwith = [];
 
-		// The language file dedicated to your module
-		$this->langfiles = ['digiquali@digiquali'];
+        // The language file dedicated to your module
+        $this->langfiles = [$this->rights_class . '@' . $this->rights_class];
 
-		// Prerequisites
-		$this->phpmin = [7, 4]; // Minimum version of PHP required by module
-		$this->need_dolibarr_version = [19, 0]; // Minimum version of Dolibarr required by module
+        // Prerequisites
+        $this->phpmin                 = [7, 4];  // Minimum version of PHP required by module
+        //$this->phpmax               = [8, 0;   // Maximum version of PHP required by module
+        $this->need_dolibarr_version  = [19, 0]; // Minimum version of Dolibarr required by module
+        //$this->max_dolibarr_version = [19, 0]; // Maximum version of Dolibarr required by module
+        $this->need_javascript_ajax   = 1;
 
-		// Messages at activation
-		$this->warnings_activation = []; // Warning to show when we activate module. array('always'='text') or array('FR'='textfr','ES'='textes'...)
-		$this->warnings_activation_ext = []; // Warning to show when we activate an external module. array('always'='text') or array('FR'='textfr','ES'='textes'...)
-		//$this->automatic_activation = array('FR'=>'DigiQualiWasAutomaticallyActivatedBecauseOfYourCountryChoice');
-		//$this->always_enabled = true;								// If true, can't be disabled
+        // Messages at activation
+        $this->warnings_activation     = []; // Warning to show when we activate a module. Example: array('always'='text') or array('FR'='textfr','MX'='textmx'...)
+        $this->warnings_activation_ext = []; // Warning to show when we activate a module if another module is on. Example: array('modOtherModule' => array('always'=>'text')) or array('always' => array('FR'=>'textfr','MX'=>'textmx'...))
+        //$this->automatic_activation  = array('FR'=>'MyModuleWasAutomaticallyActivatedBecauseOfYourCountryChoice');
+        //$this->always_enabled        = false; // If true, can't be disabled. Value true is reserved for core modules. Not allowed for external modules
 
-		// Constants
-		// List of particular constants to add when module is enabled (key, 'chaine', value, desc, visible, 'current' or 'allentities', deleteonunactive)
-		// Example: $this->const=array(1 => array('DIGIQUALI_MYNEWCONST1', 'chaine', 'myvalue', 'This is a constant to add', 1),
-		//                             2 => array('DIGIQUALI_MYNEWCONST2', 'chaine', 'myvalue', 'This is another constant to add', 0, 'current', 1)
-		// );
-		$i = 0;
-		$this->const = [
-			// CONST SHEET
-			$i++ => ['DIGIQUALI_SHEET_ADDON', 'chaine', 'mod_sheet_standard', '', 0, 'current'],
-			$i++ => ['DIGIQUALI_SHEET_TAGS_SET', 'integer', 0, '', 0, 'current'],
-			$i++ => ['DIGIQUALI_SHEET_UNIQUE_LINKED_ELEMENT', 'integer', 1, '', 0, 'current'],
-			$i++ => ['DIGIQUALI_SHEET_DISPLAY_MEDIAS', 'integer', 1, '', 0, 'current'],
-			$i++ => ['DIGIQUALI_SHEET_LINK_PRODUCT', 'integer', 0, '', 0, 'current'],
-			$i++ => ['DIGIQUALI_SHEET_LINK_PRODUCTLOT', 'integer', 0, '', 0, 'current'],
-			$i++ => ['DIGIQUALI_SHEET_LINK_USER', 'integer', 0, '', 0, 'current'],
-			$i++ => ['DIGIQUALI_SHEET_LINK_THIRDPARTY', 'integer', 0, '', 0, 'current'],
-			$i++ => ['DIGIQUALI_SHEET_LINK_CONTACT', 'integer', 0, '', 0, 'current'],
-			$i++ => ['DIGIQUALI_SHEET_LINK_PROJECT', 'integer', 0, '', 0, 'current'],
-			$i++ => ['DIGIQUALI_SHEET_LINK_TASK', 'integer', 0, '', 0, 'current'],
-            $i++ => ['DIGIQUALI_SHEET_LINK_INVOICE', 'integer', 0, '', 0, 'current'],
-            $i++ => ['DIGIQUALI_SHEET_LINK_ORDER', 'integer', 0, '', 0, 'current'],
-            $i++ => ['DIGIQUALI_SHEET_LINK_CONTRACT', 'integer', 0, '', 0, 'current'],
-            $i++ => ['DIGIQUALI_SHEET_LINK_TICKET', 'integer', 0, '', 0, 'current'],
-            $i++ => ['DIGIQUALI_SHEET_LINK_ENTREPOT', 'integer', 0, '', 0, 'current'],
-            $i++ => ['DIGIQUALI_SHEET_LINK_EXPEDITION', 'integer', 0, '', 0, 'current'],
-            $i++ => ['DIGIQUALI_SHEET_LINK_PROPAL', 'integer', 0, '', 0, 'current'],
-//            $i++ => ['DIGIQUALI_SHEET_LINK_SUPPLIER_PROPOSAL', 'integer', 0, '', 0, 'current'],
-//            $i++ => ['DIGIQUALI_SHEET_LINK_SUPPLIER_ORDER', 'integer', 0, '', 0, 'current'],
-//            $i++ => ['DIGIQUALI_SHEET_LINK_SUPPLIER_INVOICE', 'integer', 0, '', 0, 'current'],
-			$i++ => ['DIGIQUALI_SHEET_DEFAULT_TAG', 'integer', 0, '', 0, 'current'],
+        // Constants
+        // List of particular constants to add when module is enabled (key, 'chaine', value, desc, visible, 'current' or 'allentities', deleteonunactive)
+        $i           = 0;
+        $this->const = [
+            // CONST SHEET
+            $i++ => ['DIGIQUALI_SHEET_ADDON', 'chaine', 'mod_sheet_standard', '', 0, 'current'],
+            $i++ => ['DIGIQUALI_SHEET_TAGS_SET', 'integer', 0, '', 0, 'current'],
+            $i++ => ['DIGIQUALI_SHEET_UNIQUE_LINKED_ELEMENT', 'integer', 1, '', 0, 'current'],
+            $i++ => ['DIGIQUALI_SHEET_DISPLAY_MEDIAS', 'integer', 1, '', 0, 'current'],
+            $i++ => ['DIGIQUALI_SHEET_DEFAULT_TAG', 'integer', 0, '', 0, 'current'],
             $i++ => ['DIGIQUALI_SHEET_BACKWARD_COMPATIBILITY', 'integer', 0, '', 0, 'current'],
 
-			// CONST QUESTION
-			$i++ => ['DIGIQUALI_QUESTION_ADDON', 'chaine', 'mod_question_standard', '', 0, 'current'],
-			$i++ => ['DIGIQUALI_QUESTIONGROUP_ADDON', 'chaine', 'mod_questiongroup_standard', '', 0, 'current'],
+            // CONST QUESTION
+            $i++ => ['DIGIQUALI_QUESTION_ADDON', 'chaine', 'mod_question_standard', '', 0, 'current'],
+            $i++ => ['DIGIQUALI_QUESTIONGROUP_ADDON', 'chaine', 'mod_questiongroup_standard', '', 0, 'current'],
             $i++ => ['DIGIQUALI_QUESTION_BACKWARD_COMPATIBILITY', 'integer', 1, '', 0, 'current'],
 
-			// CONST ANSWER
-			$i++ => ['DIGIQUALI_ANSWER_ADDON', 'chaine', 'mod_answer_standard', '', 0, 'current'],
+            // CONST ANSWER
+            $i++ => ['DIGIQUALI_ANSWER_ADDON', 'chaine', 'mod_answer_standard', '', 0, 'current'],
 
 			// CONST CONTROL
 			$i++ => ['DIGIQUALI_CONTROL_ADDON', 'chaine', 'mod_control_standard', '', 0, 'current'],
@@ -298,23 +269,27 @@ class modDigiQuali extends DolibarrModules
 			$i++ => ['MAIN_ODT_AS_PDF', 'chaine', 'libreoffice', '', 0, 'current'],
 		];
 
-		// Some keys to add into the overwriting translation tables
-		/*$this->overwrite_translation = array(
-			'en_US:ParentCompany'=>'Parent company or reseller',
-			'fr_FR:ParentCompany'=>'Maison mère ou revendeur'
-		)*/
+        // Some keys to add into the overwriting translation tables
+        /*$this->overwrite_translation = array(
+            'en_US:ParentCompany'=>'Parent company or reseller',
+            'fr_FR:ParentCompany'=>'Maison mère ou revendeur'
+        )*/
 
-		if (!isset($conf->digiquali) || !isset($conf->digiquali->enabled)) {
-			$conf->digiquali = new stdClass();
-			$conf->digiquali->enabled = 0;
-		}
+        if (!isModEnabled($this->rights_class)) {
+            $conf->digiquali          = new stdClass();
+            $conf->digiquali->enabled = 0;
+        }
 
-		// Array to add new pages in new tabs
-		require_once __DIR__ . '/../../lib/digiquali_sheet.lib.php';
+        // Array to add new pages in new tabs
+        /* BEGIN MODULEBUILDER TABS */
+        // Don't forget to deactivate/reactivate your module to test your changes
+        $this->tabs = [];
+        /* END MODULEBUILDER TABS */
 
-		$this->tabs   = [];
-		$pictopath    = dol_buildpath('/custom/digiquali/img/digiquali_color.png', 1);
-		$pictoDigiQuali = img_picto('', $pictopath, '', 1, 0, 0, '', 'pictoModule');
+        require_once __DIR__ . '/../../lib/digiquali_sheet.lib.php';
+
+        $pictoPath       = dol_buildpath('custom/digiquali/img/digiquali_color.png', 1);
+        $picto           = img_picto('', $pictoPath, '', 1, 0, 0, '', 'pictoModule');
         $objectsMetadata = saturne_get_objects_metadata();
 
         foreach($objectsMetadata as $objectType => $objectMetadata) {
@@ -326,17 +301,18 @@ class modDigiQuali extends DolibarrModules
             } else {
                 $objectType = $objectMetadata['tab_type'];
             }
-            $this->tabs[] = ['data' => $objectType . ':+control:' . $pictoDigiQuali . $langs->trans('Controls') . ':digiquali@digiquali:$user->rights->digiquali->control->read:/custom/digiquali/view/control/control_list.php?fromid=__ID__&fromtype=' . $objectMetadata['link_name']];
-            $this->tabs[] = ['data' => $objectType . ':+survey:' . $pictoDigiQuali . $langs->trans('Surveys') . ':digiquali@digiquali:$user->rights->digiquali->survey->read:/custom/digiquali/view/survey/survey_list.php?fromid=__ID__&fromtype=' . $objectMetadata['link_name']];
+            $this->tabs[] = ['data' => $objectType . ':+control:' . $picto . $langs->trans('Controls') . ':digiquali@digiquali:$user->rights->digiquali->control->read:/custom/digiquali/view/control/control_list.php?fromid=__ID__&fromtype=' . $objectType];
+            $this->tabs[] = ['data' => $objectType . ':+survey:' . $picto . $langs->trans('Surveys') . ':digiquali@digiquali:$user->rights->digiquali->survey->read:/custom/digiquali/view/survey/survey_list.php?fromid=__ID__&fromtype=' . $objectType];
 
             $this->module_parts['hooks'][] = $objectMetadata['hook_name_list'];
             $this->module_parts['hooks'][] = $objectMetadata['hook_name_card'];
         }
 
         // Dictionaries
+        /* BEGIN MODULEBUILDER DICTIONARIES */
         $this->dictionaries = [
             'langs' => 'digiquali@digiquali',
-            // List of tables we want to see into dictonnary editor
+            // List of tables we want to see into dictionary editor
             'tabname' => [
                 MAIN_DB_PREFIX . 'c_question_type',
                 MAIN_DB_PREFIX . 'c_control_attendants_role',
@@ -350,9 +326,9 @@ class modDigiQuali extends DolibarrModules
             ],
             // Request to select fields
             'tabsql' => [
-                'SELECT f.rowid as rowid, f.ref, f.label, f.description, f.position, f.active  FROM ' . MAIN_DB_PREFIX . 'c_question_type as f',
-                'SELECT f.rowid as rowid, f.ref, f.label, f.description, f.position, f.active FROM ' . MAIN_DB_PREFIX . 'c_control_attendants_role as f',
-                'SELECT f.rowid as rowid, f.ref, f.label, f.description, f.position, f.active FROM ' . MAIN_DB_PREFIX . 'c_survey_attendants_role as f'
+                'SELECT f.rowid as rowid, f.ref, f.label, f.description, f.position, f.active  FROM ' . $this->db->prefix() . 'c_question_type as f',
+                'SELECT f.rowid as rowid, f.ref, f.label, f.description, f.position, f.active FROM ' . $this->db->prefix() . 'c_control_attendants_role as f',
+                'SELECT f.rowid as rowid, f.ref, f.label, f.description, f.position, f.active FROM ' . $this->db->prefix() . 'c_survey_attendants_role as f'
             ],
             // Sort order
             'tabsqlsort' => [
@@ -386,484 +362,332 @@ class modDigiQuali extends DolibarrModules
             ],
             // Condition to show each dictionary
             'tabcond' => [
-                $conf->digiquali->enabled,
-                $conf->digiquali->enabled,
-                $conf->digiquali->enabled
+                isModEnabled($this->rights_class),
+                isModEnabled($this->rights_class),
+                isModEnabled($this->rights_class)
             ]
         ];
+        /* END MODULEBUILDER DICTIONARIES */
 
-		// Boxes/Widgets
-		// Add here list of php file(s) stored in digiquali/core/boxes that contains a class to show a widget.
-		$this->boxes = [];
+        // Boxes/Widgets
+        // Add here list of php file(s) stored in mymodule/core/boxes that contains a class to show a widget
+        /* BEGIN MODULEBUILDER WIDGETS */
+        $this->boxes = [];
+        /* END MODULEBUILDER WIDGETS */
 
-		// Cronjobs (List of cron jobs entries to add when module is enabled)
-		$this->cronjobs = [];
+        // Cronjob (List of cron jobs entries to add when module is enabled)
+        // unit_frequency must be 60 for minute, 3600 for hour, 86400 for day, 604800 for week
+        /* BEGIN MODULEBUILDER CRON */
+        $this->cronjobs = [];
+        /* END MODULEBUILDER CRON */
 
-		// Permissions provided by this module
-		$this->rights = [];
-		$r = 0;
+        // Permissions provided by this module
+        $this->rights = [];
+        $r            = 0;
+        // Add here entries to declare new permissions
+        /* BEGIN MODULEBUILDER PERMISSIONS */
+        $o = 1;
 
-		/* DIGIQUALI PERMISSIONS */
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-		$this->rights[$r][1] = $langs->trans('LireModule', 'DigiQuali');
-		$this->rights[$r][4] = 'lire';
-		$this->rights[$r][5] = 1;
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-		$this->rights[$r][1] = $langs->trans('ReadModule', 'DigiQuali');
-		$this->rights[$r][4] = 'read';
-		$this->rights[$r][5] = 1;
-		$r++;
-
-		/* CONTROL PERMISSSIONS */
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = $langs->transnoentities('ReadObjects',$langs->transnoentities('ControlsMin')); // Permission label
-		$this->rights[$r][4] = 'control'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = $langs->transnoentities('CreateObjects', $langs->transnoentities('ControlsMin')); // Permission label
-		$this->rights[$r][4] = 'control'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = $langs->transnoentities('DeleteObjects', $langs->transnoentities('ControlsMin')); // Permission label
-		$this->rights[$r][4] = 'control'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = $langs->transnoentities('CanSetVerdict'); // Permission label
-		$this->rights[$r][4] = 'control'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$this->rights[$r][5] = 'setverdict'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$r++;
-
-		/* QUESTION PERMISSSIONS */
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = $langs->transnoentities('ReadObjects',$langs->transnoentities('Questions')); // Permission label
-		$this->rights[$r][4] = 'question'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = $langs->transnoentities('CreateObjects', $langs->transnoentities('Questions')); // Permission label
-		$this->rights[$r][4] = 'question'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = $langs->transnoentities('DeleteObjects', $langs->transnoentities('Questions')); // Permission label
-		$this->rights[$r][4] = 'question'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$r++;
-
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-        $this->rights[$r][1] = $langs->transnoentities('ReadObjects',$langs->transnoentities('QuestionGroup')); // Permission label
-        $this->rights[$r][4] = 'questiongroup'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-        $this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-        $r++;
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-        $this->rights[$r][1] = $langs->transnoentities('CreateObjects', $langs->transnoentities('QuestionGroup')); // Permission label
-        $this->rights[$r][4] = 'questiongroup'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-        $this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-        $r++;
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-        $this->rights[$r][1] = $langs->transnoentities('DeleteObjects', $langs->transnoentities('QuestionGroup')); // Permission label
-        $this->rights[$r][4] = 'questiongroup'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-        $this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
+        /* DIGIQUALI PERMISSIONS */
+        $this->rights[$r][0] = $this->numero . sprintf('%02d', ($o * 10) + $r); // Permission id (must not be already used)
+        $this->rights[$r][1] = $langs->trans('ReadModule', $this->name);        // Permission label
+        $this->rights[$r][4] = 'read';
+        $this->rights[$r][5] = 1;                                               // In php code, permission will be checked by test if ($user->hasRight('mymodule', 'myobject', 'read'))
         $r++;
 
-		/* SHEET PERMISSSIONS */
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = $langs->transnoentities('ReadObjects',$langs->transnoentities('Sheets')); // Permission label
-		$this->rights[$r][4] = 'sheet'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = $langs->transnoentities('CreateObjects', $langs->transnoentities('Sheets')); // Permission label
-		$this->rights[$r][4] = 'sheet'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-		$this->rights[$r][1] = $langs->transnoentities('DeleteObjects', $langs->transnoentities('Sheets')); // Permission label
-		$this->rights[$r][4] = 'sheet'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-		$r++;
-
-        /* SURVEY PERMISSSIONS */
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-        $this->rights[$r][1] = $langs->transnoentities('ReadObjects', dol_strtolower($langs->transnoentities('Surveys'))); // Permission label
-        $this->rights[$r][4] = 'survey'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-        $this->rights[$r][5] = 'read'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-        $r++;
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-        $this->rights[$r][1] = $langs->transnoentities('CreateObjects', dol_strtolower($langs->transnoentities('Surveys'))); // Permission label
-        $this->rights[$r][4] = 'survey'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-        $this->rights[$r][5] = 'write'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-        $r++;
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1); // Permission id (must not be already used)
-        $this->rights[$r][1] = $langs->transnoentities('DeleteObjects', dol_strtolower($langs->transnoentities('Surveys'))); // Permission label
-        $this->rights[$r][4] = 'survey'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-        $this->rights[$r][5] = 'delete'; // In php code, permission will be checked by test if ($user->rights->digiquali->level1->level2)
-        $r++;
-
-        /* DIGIQUALI STANDDARD PERMISSSIONS */
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-        $this->rights[$r][1] = $langs->transnoentities('ReadObjects', $langs->transnoentities('DigiQualiStandards'));
-        $this->rights[$r][4] = 'digiqualistandard';
-        $this->rights[$r][5] = 'read';
-        $r++;
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-        $this->rights[$r][1] = $langs->transnoentities('CreateObjects', $langs->transnoentities('DigiQualiStandards'));
-        $this->rights[$r][4] = 'digiqualistandard';
-        $this->rights[$r][5] = 'write';
-        $r++;
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-        $this->rights[$r][1] = $langs->transnoentities('DeleteObjects', $langs->transnoentities('DigiQualiStandards'));
-        $this->rights[$r][4] = 'digiqualistandard';
-        $this->rights[$r][5] = 'delete';
-        $r++;
-
-        /* DIGIQUALI ELEMENT PERMISSSIONS */
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-        $this->rights[$r][1] = $langs->transnoentities('ReadObjects', $langs->transnoentities('DigiQualiElements'));
-        $this->rights[$r][4] = 'digiqualielement';
-        $this->rights[$r][5] = 'read';
-        $r++;
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-        $this->rights[$r][1] = $langs->transnoentities('CreateObjects', $langs->transnoentities('DigiQualiElements'));
-        $this->rights[$r][4] = 'digiqualielement';
-        $this->rights[$r][5] = 'write';
-        $r++;
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-        $this->rights[$r][1] = $langs->transnoentities('DeleteObjects', $langs->transnoentities('DigiQualiElements'));
-        $this->rights[$r][4] = 'digiqualielement';
-        $this->rights[$r][5] = 'delete';
-        $r++;
-
-        /* ACTIVITY PERMISSSIONS */
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-        $this->rights[$r][1] = $langs->transnoentities('ReadObjects', dol_strtolower($langs->transnoentities('Activity')));
-        $this->rights[$r][4] = 'activity';
-        $this->rights[$r][5] = 'read';
-        $r++;
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-        $this->rights[$r][1] = $langs->transnoentities('CreateObjects', dol_strtolower($langs->transnoentities('Activity')));
-        $this->rights[$r][4] = 'activity';
-        $this->rights[$r][5] = 'write';
-        $r++;
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-        $this->rights[$r][1] = $langs->transnoentities('DeleteObjects', dol_strtolower($langs->transnoentities('Activity')));
-        $this->rights[$r][4] = 'activity';
-        $this->rights[$r][5] = 'delete';
-        $r++;
-
-        /* RISKASSESSMENT PERMISSSIONS */
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-        $this->rights[$r][1] = $langs->transnoentities('ReadObjects', dol_strtolower($langs->transnoentities('RiskAssessment')));
-        $this->rights[$r][4] = 'riskassessment';
-        $this->rights[$r][5] = 'read';
-        $r++;
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-        $this->rights[$r][1] = $langs->transnoentities('CreateObjects', dol_strtolower($langs->transnoentities('RiskAssessment')));
-        $this->rights[$r][4] = 'riskassessment';
-        $this->rights[$r][5] = 'write';
-        $r++;
-        $this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-        $this->rights[$r][1] = $langs->transnoentities('DeleteObjects', dol_strtolower($langs->transnoentities('RiskAssessment')));
-        $this->rights[$r][4] = 'riskassessment';
-        $this->rights[$r][5] = 'delete';
-        $r++;
+        $moduleObjects = [
+            'control' => [
+                'read'       => $langs->transnoentities('ReadObjects', $langs->transnoentities('ControlsMin')),
+                'write'      => $langs->transnoentities('CreateObjects', $langs->transnoentities('ControlsMin')),
+                'delete'     => $langs->transnoentities('DeleteObjects', $langs->transnoentities('ControlsMin')),
+                'setverdict' => $langs->transnoentities('CanSetVerdict')
+            ],
+            'question' => [
+                'read'   => $langs->transnoentities('ReadObjects', $langs->transnoentities('Questions')),
+                'write'  => $langs->transnoentities('CreateObjects', $langs->transnoentities('Questions')),
+                'delete' => $langs->transnoentities('DeleteObjects', $langs->transnoentities('Questions'))
+            ],
+            'questiongroup' => [
+                'read'   => $langs->transnoentities('ReadObjects', $langs->transnoentities('QuestionGroup')),
+                'write'  => $langs->transnoentities('CreateObjects', $langs->transnoentities('QuestionGroup')),
+                'delete' => $langs->transnoentities('DeleteObjects', $langs->transnoentities('QuestionGroup'))
+            ],
+            'sheet' => [
+                'read'   => $langs->transnoentities('ReadObjects', $langs->transnoentities('Sheets')),
+                'write'  => $langs->transnoentities('CreateObjects', $langs->transnoentities('Sheets')),
+                'delete' => $langs->transnoentities('DeleteObjects', $langs->transnoentities('Sheets'))
+            ],
+            'survey' => [
+                'read'   => $langs->transnoentities('ReadObjects', dol_strtolower($langs->transnoentities('Surveys'))),
+                'write'  => $langs->transnoentities('CreateObjects', dol_strtolower($langs->transnoentities('Surveys'))),
+                'delete' => $langs->transnoentities('DeleteObjects', dol_strtolower($langs->transnoentities('Surveys')))
+            ],
+            $this->rights_class . 'standard' => [
+                'read'   => $langs->transnoentities('ReadObjects', $langs->transnoentities('DigiQualiStandards')),
+                'write'  => $langs->transnoentities('CreateObjects', $langs->transnoentities('DigiQualiStandards')),
+                'delete' => $langs->transnoentities('DeleteObjects', $langs->transnoentities('DigiQualiStandards'))
+            ],
+            $this->rights_class . 'element' => [
+                'read'   => $langs->transnoentities('ReadObjects', $langs->transnoentities('DigiQualiElements')),
+                'write'  => $langs->transnoentities('CreateObjects', $langs->transnoentities('DigiQualiElements')),
+                'delete' => $langs->transnoentities('DeleteObjects', $langs->transnoentities('DigiQualiElements'))
+            ],
+            'activity' => [
+                'read'   => $langs->transnoentities('ReadObjects', dol_strtolower($langs->transnoentities('Activity'))),
+                'write'  => $langs->transnoentities('CreateObjects', dol_strtolower($langs->transnoentities('Activity'))),
+                'delete' => $langs->transnoentities('DeleteObjects', dol_strtolower($langs->transnoentities('Activity')))
+            ],
+            'riskassessment' => [
+                'read'   => $langs->transnoentities('ReadObjects', dol_strtolower($langs->transnoentities('RiskAssessment'))),
+                'write'  => $langs->transnoentities('CreateObjects', dol_strtolower($langs->transnoentities('RiskAssessment'))),
+                'delete' => $langs->transnoentities('DeleteObjects', dol_strtolower($langs->transnoentities('RiskAssessment')))
+            ],
+        ];
+        foreach ($moduleObjects as $moduleObject => $permissionTypes) {
+            foreach ($permissionTypes as $permissionType => $permissionLabel) {
+                $this->rights[$r][0] = $this->numero . sprintf('%02d', ($o * 10) + $r);
+                $this->rights[$r][1] = $permissionLabel;
+                $this->rights[$r][4] = $moduleObject;
+                $this->rights[$r][5] = $permissionType;
+                $r++;
+            }
+        }
 
         /* ADMINPAGE PANEL ACCESS PERMISSIONS */
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-		$this->rights[$r][1] = $langs->transnoentities('ReadAdminPage', 'DigiQuali');
-		$this->rights[$r][4] = 'adminpage';
-		$this->rights[$r][5] = 'read';
-		$r++;
-		$this->rights[$r][0] = $this->numero . sprintf('%02d', $r + 1);
-		$this->rights[$r][1] = $langs->transnoentities('ChangeUserController');
-		$this->rights[$r][4] = 'adminpage';
-		$this->rights[$r][5] = 'changeusercontroller';
+        $this->rights[$r][0] = $this->numero . sprintf('%02d', ($o * 10) + $r);
+        $this->rights[$r][1] = $langs->transnoentities('ReadAdminPage', $this->name);
+        $this->rights[$r][4] = 'adminpage';
+        $this->rights[$r][5] = 'read';
+        $r++;
+        $this->rights[$r][0] = $this->numero . sprintf('%02d', ($o * 10) + $r);
+        $this->rights[$r][1] = $langs->transnoentities('ChangeUserController');
+        $this->rights[$r][4] = 'adminpage';
+        $this->rights[$r][5] = 'changeusercontroller';
+        $r++;
+        $this->rights[$r][0] = $this->numero . sprintf('%02d', ($o * 10) + $r);
+        $this->rights[$r][1] = $langs->transnoentities('UseToolsPanel');
+        $this->rights[$r][4] = 'adminpage';
+        $this->rights[$r][5] = 'tools';
+        /* END MODULEBUILDER PERMISSIONS */
 
-		// Main menu entries to add
-		$this->menu = [];
-		$r = 0;
+        // Main menu entries to add
+        $this->menu = [];
+        $r = 0;
+        // Add here entries to declare new menus
+        /* BEGIN MODULEBUILDER TOPMENU */
+        $this->menu[$r++] = [
+            'fk_menu'  => '',                                                                         // Will be stored into mainmenu + leftmenu. Use '' if this is a top menu. For left menu, use 'fk_mainmenu=xxx' or 'fk_mainmenu=xxx,fk_leftmenu=yyy' where xxx is mainmenucode and yyy is a leftmenucode
+            'type'     => 'top',                                                                      // This is a Top menu entry
+            'titre'    => $this->name,
+            'prefix'   => img_picto('', $this->picto, 'class="pictofixedwidth"'),
+            'mainmenu' => $this->rights_class,
+            'leftmenu' => '',
+            'url'      => '/' . $this->rights_class . '/' . $this->rights_class . 'index.php',        // Lang file to use (without .lang) by module. File must be in langs/code_CODE/ directory
+            'langs'    => $this->rights_class . '@' . $this->rights_class,
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'' . $this->rights_class . '\')',                               // Define condition to show or hide menu entry. Use "isModEnabled('mymodule')" if entry must be visible if module is enabled (those quote marks are importants)
+            'perms'    => '$user->hasRight(\'' . $this->rights_class . '\', \'read\')',                  // Use 'perms'=>'$user->hasRight("mymodule", "myobject", "read")' if you want your menu with a permission rules
+            'target'   => '',
+            'user'     => 2,                                                                        // 0=Menu for internal users, 1=external users, 2=both
+        ];
+        /* END MODULEBUILDER TOPMENU */
 
-		// Add here entries to declare new menus
-		$this->menu[$r++] = [
-			'fk_menu'  => 'fk_mainmenu=digiquali',
-			'type'     => 'top',
-			'titre'    => $langs->trans('DigiQuali'),
-			'prefix'   => '<i class="fas fa-home pictofixedwidth"></i>',
-			'mainmenu' => 'digiquali',
-			'leftmenu' => '',
-			'url'      => '/digiquali/digiqualiindex.php',
-			'langs'    => 'digiquali@digiquali',
-			'position' => 1000 + $r,
-			'enabled'  => '$conf->digiquali->enabled && $user->rights->digiquali->lire',
-			'perms'    => '$user->rights->digiquali->lire',
-			'target'   => '',
-			'user'     => 0,
-		];
+        /* BEGIN MODULEBUILDER LEFTMENU MYOBJECT */
+        $this->menu[$r++] = [
+            'fk_menu'  => 'fk_mainmenu=' . $this->rights_class,
+            'type'     => 'left',
+            'titre'    => $this->name,
+            'prefix'   => img_picto('', 'fontawesome_fa-home_fas', 'class="pictofixedwidth"'),
+            'mainmenu' => $this->rights_class,
+            'leftmenu' => $this->rights_class . '_index',
+            'url'      => '/' . $this->rights_class . '/' . $this->rights_class . 'index.php',
+            'langs'    => $this->rights_class . '@' . $this->rights_class,
+            'position' => 1000 + $r,
+            'enabled'  => 'isModEnabled(\'' . $this->rights_class . '\')',
+            'perms'    => '$user->hasRight(\'' . $this->rights_class . '\', \'read\')',
+            'target'   => '',
+            'user'     => 2,
+        ];
 
-		$this->menu[$r++] = [
-			'fk_menu'  => 'fk_mainmenu=digiquali',
-			'type'     => 'left',
-			'titre'    => $langs->transnoentities('Question'),
-			'prefix'   => '<i class="fas fa-question pictofixedwidth"></i>',
-			'mainmenu' => 'digiquali',
-			'leftmenu' => 'digiquali_question',
-			'url'      => '/digiquali/view/question/question_list.php',
-			'langs'    => 'digiquali@digiquali',
-			'position' => 1000 + $r,
-			'enabled'  => '$conf->digiquali->enabled && $user->rights->digiquali->question->read',
-			'perms'    => '$user->rights->digiquali->question->read',
-			'target'   => '',
-			'user'     => 0,
-		];
-
-		$this->menu[$r++] = [
-			'fk_menu'  => 'fk_mainmenu=digiquali,fk_leftmenu=digiquali_question',
-			'type'     => 'left',
-			'titre'    => '<i class="fas fa-tags pictofixedwidth" style="padding-right: 4px;"></i>' . $langs->transnoentities('Categories'),
-			'mainmenu' => 'digiquali',
-			'leftmenu' => 'digiquali_questiontags',
-			'url'      => '/categories/index.php?type=question',
-			'langs'    => 'digiquali@digiquali',
-			'position' => 1000 + $r,
-			'enabled'  => '$conf->digiquali->enabled && $conf->categorie->enabled && $user->rights->digiquali->question->read',
-			'perms'    => '$user->rights->digiquali->question->read',
-			'target'   => '',
-			'user'     => 0,
-		];
-
-        // $this->menu[$r++] = [
-        //     'fk_menu'  => 'fk_mainmenu=digiquali',
-        //     'type'     => 'left',
-        //     'titre'    => $langs->transnoentities('QuestionGroup'),
-        //     'prefix'   => '<i class="fas fa-folder pictofixedwidth"></i>',
-        //     'mainmenu' => 'digiquali',
-        //     'leftmenu' => 'digiquali_questiongroup',
-        //     'url'      => '/digiquali/view/questiongroup/questiongroup_list.php',
-        //     'langs'    => 'digiquali@digiquali',
-        //     'position' => 1000 + $r,
-        //     'enabled'  => '$conf->digiquali->enabled && $user->rights->digiquali->questiongroup->read',
-        //     'perms'    => '$user->rights->digiquali->questiongroup->read',
-        //     'target'   => '',
-        //     'user'     => 0,
-        // ];
-
-        // $this->menu[$r++] = [
-        //     'fk_menu'  => 'fk_mainmenu=digiquali,fk_leftmenu=digiquali_questiongroup',
-        //     'type'     => 'left',
-        //     'titre'    => '<i class="fas fa-tags pictofixedwidth" style="padding-right: 4px;"></i>' . $langs->transnoentities('Categories'),
-        //     'mainmenu' => 'digiquali',
-        //     'leftmenu' => 'digiquali_questiongrouptags',
-        //     'url'      => '/categories/index.php?type=question_group',
-        //     'langs'    => 'digiquali@digiquali',
-        //     'position' => 1000 + $r,
-        //     'enabled'  => '$conf->digiquali->enabled && $conf->categorie->enabled && $user->rights->digiquali->questiongroup->read',
-        //     'perms'    => '$user->rights->digiquali->questiongroup->read',
-        //     'target'   => '',
-        //     'user'     => 0,
-        // ];
-
-		$this->menu[$r++] = [
-			'fk_menu'  => 'fk_mainmenu=digiquali',
-			'type'     => 'left',
-			'titre'    => $langs->transnoentities('Sheet'),
-			'prefix'   => '<i class="fas fa-list pictofixedwidth"></i>',
-			'mainmenu' => 'digiquali',
-			'leftmenu' => 'digiquali_sheet',
-			'url'      => '/digiquali/view/sheet/sheet_list.php',
-			'langs'    => 'digiquali@digiquali',
-			'position' => 1000 + $r,
-			'enabled'  => '$conf->digiquali->enabled && $user->rights->digiquali->sheet->read',
-			'perms'    => '$user->rights->digiquali->sheet->read',
-			'target'   => '',
-			'user'     => 0,
-		];
-
-		$this->menu[$r++] = [
-			'fk_menu'  => 'fk_mainmenu=digiquali,fk_leftmenu=digiquali_sheet',
-			'type'     => 'left',
-			'titre'    => '<i class="fas fa-tags pictofixedwidth" style="padding-right: 4px;"></i>' . $langs->transnoentities('Categories'),
-			'mainmenu' => 'digiquali',
-			'leftmenu' => 'digiquali_sheettags',
-			'url'      => '/categories/index.php?type=sheet',
-			'langs'    => 'digiquali@digiquali',
-			'position' => 1000 + $r,
-			'enabled'  => '$conf->digiquali->enabled && $conf->categorie->enabled && $user->rights->digiquali->sheet->read',
-			'perms'    => '$user->rights->digiquali->sheet->read',
-			'target'   => '',
-			'user'     => 0,
-		];
-
-		$this->menu[$r++] = [
-			'fk_menu'  => 'fk_mainmenu=digiquali',
-			'type'     => 'left',
-			'titre'    => $langs->transnoentities('Control'),
-			'prefix'   => '<i class="fas fa-tasks pictofixedwidth"></i>',
-			'mainmenu' => 'digiquali',
-			'leftmenu' => 'digiquali_control',
-			'url'      => '/digiquali/view/control/control_list.php',
-			'langs'    => 'digiquali@digiquali',
-			'position' => 1000 + $r,
-			'enabled'  => '$conf->digiquali->enabled && $user->rights->digiquali->control->read',
-			'perms'    => '$user->rights->digiquali->control->read',
-			'target'   => '',
-			'user'     => 0,
-		];
-
-		$this->menu[$r++] = [
-			'fk_menu'  => 'fk_mainmenu=digiquali,fk_leftmenu=digiquali_control',
-			'type'     => 'left',
-			'titre'    => '<i class="fas fa-tags pictofixedwidth" style="padding-right: 4px;"></i>' . $langs->transnoentities('Categories'),
-			'mainmenu' => 'digiquali',
-			'leftmenu' => 'digiquali_controltags',
-			'url'      => '/categories/index.php?type=control',
-			'langs'    => 'digiquali@digiquali',
-			'position' => 1000 + $r,
-			'enabled'  => '$conf->digiquali->enabled && $conf->categorie->enabled && $user->rights->digiquali->control->read',
-			'perms'    => '$user->rights->digiquali->control->read',
-			'target'   => '',
-			'user'     => 0,
-		];
+        $moduleObjects = [
+            'question' => 'question',
+            'sheet'    => 'list',
+            'control'  => 'tasks',
+            'survey'   => 'marker',
+        ];
+        foreach ($moduleObjects as $moduleObject => $picto) {
+            $this->menu[$r++] = [
+                'fk_menu'  => 'fk_mainmenu=' . $this->rights_class,
+                'type'     => 'left',
+                'titre'    => $langs->transnoentities(dol_ucfirst($moduleObject)),
+                'prefix'   => img_picto('', 'fontawesome_' . $picto . '_fas', 'class="pictofixedwidth"'),
+                'mainmenu' => $this->rights_class,
+                'leftmenu' => $this->rights_class . '_' . $moduleObject . '_list',
+                'url'      => '/' . $this->rights_class . '/view/' . $moduleObject . '/' . $moduleObject . '_list.php',
+                'langs'    => $this->rights_class . '@' . $this->rights_class,
+                'position' => 1000 + $r,
+                'enabled'  => 'isModEnabled(\'' . $this->rights_class . '\')',
+                'perms'    => '$user->hasRight(\'' . $this->rights_class . '\', \'' . $moduleObject . '\', \'read\')',
+                'target'   => '',
+                'user'     => 2,
+            ];
+        }
 
         $this->menu[$r++] = [
-            'fk_menu'  => 'fk_mainmenu=digiquali',
+            'fk_menu'  => 'fk_mainmenu=' . $this->rights_class,
             'type'     => 'left',
-            'titre'    => $langs->transnoentities('Survey'),
-            'prefix'   => '<i class="fas fa-marker pictofixedwidth"></i>',
-            'mainmenu' => 'digiquali',
-            'leftmenu' => 'digiquali_survey',
-            'url'      => '/digiquali/view/survey/survey_list.php',
-            'langs'    => 'digiquali@digiquali',
+            'titre'    => $langs->transnoentities('Mapping'),
+            'prefix'   => img_picto('', 'fontawesome_sitemap_fas', 'class="pictofixedwidth"'),
+            'mainmenu' => $this->rights_class,
+            'leftmenu' => $this->rights_class . 'standard',
+            'url'      => '/' . $this->rights_class . '/view/' . $this->rights_class . 'standard/' . $this->rights_class . 'standard_card.php?module_name=' . $this->rights_class,
+            'langs'    => $this->rights_class . '@' . $this->rights_class,
             'position' => 1000 + $r,
-            'enabled'  => '$conf->digiquali->enabled && $user->rights->digiquali->survey->read',
-            'perms'    => '$user->rights->digiquali->survey->read',
+            'enabled'  => 'isModEnabled(\'' . $this->rights_class . '\')',
+            'perms'    => '$user->hasRight(\'' . $this->rights_class . '\', \'' . $this->rights_class . 'standard\', \'read\')',
             'target'   => '',
-            'user'     => 0,
+            'user'     => 2,
         ];
 
         $this->menu[$r++] = [
-            'fk_menu'  => 'fk_mainmenu=digiquali,fk_leftmenu=digiquali_survey',
+            'fk_menu'  => 'fk_mainmenu=' . $this->rights_class,
             'type'     => 'left',
-            'titre'    => '<i class="fas fa-tags pictofixedwidth" style="padding-right: 4px;"></i>' . $langs->transnoentities('Categories'),
-            'mainmenu' => 'digiquali',
-            'leftmenu' => 'digiquali_surveytags',
-            'url'      => '/categories/index.php?type=survey',
-            'langs'    => 'digiquali@digiquali',
+            'titre'    => $langs->transnoentities('Tools'),
+            'prefix'   => img_picto('', 'fontawesome_wrench_fas', 'class="pictofixedwidth"'),
+            'mainmenu' => $this->rights_class,
+            'leftmenu' => $this->rights_class . '_tools',
+            'url'      => '/' . $this->rights_class . '/view/' . $this->rights_class . 'tools.php',
+            'langs'    => $this->rights_class . '@' . $this->rights_class,
             'position' => 1000 + $r,
-            'enabled'  => '$conf->digiquali->enabled && $conf->categorie->enabled && $user->rights->digiquali->survey->read',
-            'perms'    => '$user->rights->digiquali->survey->read',
+            'enabled'  => 'isModEnabled(\'' . $this->rights_class . '\')',
+            'perms'    => '$user->hasRight(\'' . $this->rights_class . '\', \'adminpage\', \'tools\')',
             'target'   => '',
-            'user'     => 0,
+            'user'     => 2,
         ];
+        /* END MODULEBUILDER LEFTMENU MYOBJECT */
 
-        $this->menu[$r++] = [
-            'fk_menu'  => 'fk_mainmenu=digiquali',
-            'type'     => 'left',
-            'titre'    => $langs->trans('Mapping'),
-            'prefix'   => '<i class="fas fa-sitemap pictofixedwidth"></i>',
-            'mainmenu' => 'digiquali',
-            'leftmenu' => 'digiqualistandard',
-            'url'      => '/digiquali/view/digiqualistandard/digiqualistandard_card.php?module_name=digiquali',
-            'langs'    => 'digiquali@digiquali',
-            'position' => 1000 + $r,
-            'enabled'  => 'isModEnabled("digiquali")',
-            'perms'    => 1, //'$user->hasRight("digiquali", "digiqualistandard", "read")',
-            'target'   => '',
-            'user'     => 0
-        ];
+        // Exports profiles provided by this module
+        $r = 0;
+        /* BEGIN MODULEBUILDER EXPORT MYOBJECT */
+        /*
+        $langs->load("mymodule@mymodule");
+        $this->export_code[$r] = $this->rights_class.'_'.$r;
+        $this->export_label[$r] = 'MyObjectLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
+        $this->export_icon[$r] = $this->picto;
+        // Define $this->export_fields_array, $this->export_TypeFields_array and $this->export_entities_array
+        $keyforclass = 'MyObject'; $keyforclassfile='/mymodule/class/myobject.class.php'; $keyforelement='myobject@mymodule';
+        include DOL_DOCUMENT_ROOT.'/core/commonfieldsinexport.inc.php';
+        //$this->export_fields_array[$r]['t.fieldtoadd']='FieldToAdd'; $this->export_TypeFields_array[$r]['t.fieldtoadd']='Text';
+        //unset($this->export_fields_array[$r]['t.fieldtoremove']);
+        //$keyforclass = 'MyObjectLine'; $keyforclassfile='/mymodule/class/myobject.class.php'; $keyforelement='myobjectline@mymodule'; $keyforalias='tl';
+        //include DOL_DOCUMENT_ROOT.'/core/commonfieldsinexport.inc.php';
+        $keyforselect='myobject'; $keyforaliasextra='extra'; $keyforelement='myobject@mymodule';
+        include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
+        //$keyforselect='myobjectline'; $keyforaliasextra='extraline'; $keyforelement='myobjectline@mymodule';
+        //include DOL_DOCUMENT_ROOT.'/core/extrafieldsinexport.inc.php';
+        //$this->export_dependencies_array[$r] = array('myobjectline' => array('tl.rowid','tl.ref')); // To force to activate one or several fields if we select some fields that need same (like to select a unique key if we ask a field of a child to avoid the DISTINCT to discard them, or for computed field than need several other fields)
+        //$this->export_special_array[$r] = array('t.field' => '...');
+        //$this->export_examplevalues_array[$r] = array('t.field' => 'Example');
+        //$this->export_help_array[$r] = array('t.field' => 'FieldDescHelp');
+        $this->export_sql_start[$r]='SELECT DISTINCT ';
+        $this->export_sql_end[$r]  =' FROM '.$this->db->prefix().'mymodule_myobject as t';
+        //$this->export_sql_end[$r]  .=' LEFT JOIN '.$this->db->prefix().'mymodule_myobject_line as tl ON tl.fk_myobject = t.rowid';
+        $this->export_sql_end[$r] .=' WHERE 1 = 1';
+        $this->export_sql_end[$r] .=' AND t.entity IN ('.getEntity('myobject').')';
+        $r++; */
+        /* END MODULEBUILDER EXPORT MYOBJECT */
 
-		$this->menu[$r++] = [
-			'fk_menu'  => 'fk_mainmenu=digiquali',
-			'type'     => 'left',
-			'titre'    => '<i class="fas fa-wrench pictofixedwidth"></i>' . $langs->transnoentities('Tools'),
-			'mainmenu' => 'digiquali',
-			'leftmenu' => 'digiquali_tools',
-			'url'      => '/digiquali/view/digiqualitools.php',
-			'langs'    => 'digiquali@digiquali',
-			'position' => 1000 + $r,
-			'enabled'  => '$conf->digiquali->enabled',
-			'perms'    => '$user->rights->digiquali->question->write && $user->rights->digiquali->sheet->write',
-			'target'   => '',
-			'user'     => 0,
-		];
-	}
+        // Imports profiles provided by this module
+        $r = 0;
+        /* BEGIN MODULEBUILDER IMPORT MYOBJECT */
+        /*
+        $langs->load("mymodule@mymodule");
+        $this->import_code[$r] = $this->rights_class.'_'.$r;
+        $this->import_label[$r] = 'MyObjectLines';	// Translation key (used only if key ExportDataset_xxx_z not found)
+        $this->import_icon[$r] = $this->picto;
+        $this->import_tables_array[$r] = array('t' => $this->db->prefix().'mymodule_myobject', 'extra' => $this->db->prefix().'mymodule_myobject_extrafields');
+        $this->import_tables_creator_array[$r] = array('t' => 'fk_user_author'); // Fields to store import user id
+        $import_sample = array();
+        $keyforclass = 'MyObject'; $keyforclassfile='/mymodule/class/myobject.class.php'; $keyforelement='myobject@mymodule';
+        include DOL_DOCUMENT_ROOT.'/core/commonfieldsinimport.inc.php';
+        $import_extrafield_sample = array();
+        $keyforselect='myobject'; $keyforaliasextra='extra'; $keyforelement='myobject@mymodule';
+        include DOL_DOCUMENT_ROOT.'/core/extrafieldsinimport.inc.php';
+        $this->import_fieldshidden_array[$r] = array('extra.fk_object' => 'lastrowid-'.$this->db->prefix().'mymodule_myobject');
+        $this->import_regex_array[$r] = array();
+        $this->import_examplevalues_array[$r] = array_merge($import_sample, $import_extrafield_sample);
+        $this->import_updatekeys_array[$r] = array('t.ref' => 'Ref');
+        $this->import_convertvalue_array[$r] = array(
+            't.ref' => array(
+                'rule'=>'getrefifauto',
+                'class'=>(!getDolGlobalString('MYMODULE_MYOBJECT_ADDON') ? 'mod_myobject_standard' : getDolGlobalString('MYMODULE_MYOBJECT_ADDON')),
+                'path'=>"/core/modules/mymodule/".(!getDolGlobalString('MYMODULE_MYOBJECT_ADDON') ? 'mod_myobject_standard' : getDolGlobalString('MYMODULE_MYOBJECT_ADDON')).'.php',
+                'classobject'=>'MyObject',
+                'pathobject'=>'/mymodule/class/myobject.class.php',
+            ),
+            't.fk_soc' => array('rule' => 'fetchidfromref', 'file' => '/societe/class/societe.class.php', 'class' => 'Societe', 'method' => 'fetch', 'element' => 'ThirdParty'),
+            't.fk_user_valid' => array('rule' => 'fetchidfromref', 'file' => '/user/class/user.class.php', 'class' => 'User', 'method' => 'fetch', 'element' => 'user'),
+            't.fk_mode_reglement' => array('rule' => 'fetchidfromcodeorlabel', 'file' => '/compta/paiement/class/cpaiement.class.php', 'class' => 'Cpaiement', 'method' => 'fetch', 'element' => 'cpayment'),
+        );
+        $this->import_run_sql_after_array[$r] = array();
+        $r++; */
+        /* END MODULEBUILDER IMPORT MYOBJECT */
+    }
 
-	/**
-	 *  Function called when module is enabled.
-	 *  The init function add constants, boxes, permissions and menus (defined in constructor) into Dolibarr database.
-	 *  It also creates data directories
-	 *
-	 *  @param      string  $options    Options when enabling module ('', 'noboxes')
-	 *  @return     int             	1 if OK, 0 if KO
-	 */
-	public function init($options = ''): int
-	{
-		global $conf, $langs, $user;
+    /**
+     * Function called when module is enabled.
+     * The init function add constants, boxes, permissions and menus (defined in constructor) into Dolibarr database.
+     * It also creates data directories
+     *
+     * @param  string $options Options when enabling module ('', 'noboxes')
+     * @return int             1 if OK, 0 if KO
+     * @throws Exception
+     */
+    public function init($options = ''): int
+    {
+        global $conf, $langs, $user;
 
-		if ($this->error > 0) {
-			setEventMessages('', $this->errors, 'errors');
-			return -1; // Do not activate module if error 'not allowed' returned when loading module SQL queries (the _load_table run sql with run_sql with the error allowed parameter set to 'default')
-		}
+        if ($this->error > 0) {
+            setEventMessages('', $this->errors, 'errors');
+            return -1; // Do not activate module if error 'not allowed' returned when loading module SQL queries (the _load_table run sql with run_sql with the error allowed parameter set to 'default')
+        }
 
-		$sql    = [];
-		$result = $this->_load_tables('/digiquali/sql/');
+        $sql    = [];
+        $result = $this->_load_tables('/' . $this->rights_class . '/sql/');
+        if ($result < 0) {
+            return -1; // Do not activate module if error 'not allowed' returned when loading module SQL queries (the _load_table run sql with run_sql with the error allowed parameter set to 'default')
+        }
 
-		// Load sql sub folders
-		$sqlFolder = scandir(__DIR__ . '/../../sql');
-		foreach ($sqlFolder as $subFolder) {
-			if ( ! preg_match('/\./', $subFolder)) {
-				$this->_load_tables('/digiquali/sql/' . $subFolder . '/');
-			}
-		}
+        // Load sql sub folders
+        $sqlFolder = scandir(__DIR__ . '/../../sql');
+        foreach ($sqlFolder as $subFolder) {
+            if (!preg_match('/\./', $subFolder)) {
+                $result = $this->_load_tables('/' . $this->rights_class . '/sql/' . $subFolder . '/');
+                if ($result < 0) {
+                    return -1; // Do not activate module if error 'not allowed' returned when loading module SQL queries (the _load_table run sql with run_sql with the error allowed parameter set to 'default')
+                }
+            }
+        }
 
-		if (getDolGlobalInt('DIGIQUALI_DOCUMENT_DIRECTORIES_NAME_BACKWARD_COMPATIBILITY') == 0) {
-			$documentsPath = DOL_DATA_ROOT . ($conf->entity > 1 ? '/' . $conf->entity : '');
-			$ecmPath =  $documentsPath . '/ecm' ;
+        // Permissions
+        $this->remove($options);
 
-			if (is_dir($ecmPath)) {
-				if (is_dir($ecmPath . '/dolismq')) {
-                    chmod($ecmPath . '/dolismq', 0755);
-                    rename($ecmPath . '/dolismq', $ecmPath . '/digiquali');
-				}
-			}
+        $moduleNameUpperCase = strtoupper($this->name);
 
-			$moduleDocumentsPath = $documentsPath . '/dolismq';
-			if (is_dir($moduleDocumentsPath)) {
-                chmod($moduleDocumentsPath, 0755);
-				rename($moduleDocumentsPath, $documentsPath . '/digiquali');
-			}
+        dolibarr_set_const($this->db, $moduleNameUpperCase . '_VERSION', $this->version, 'chaine', 0, '', $conf->entity);
+        dolibarr_set_const($this->db, $moduleNameUpperCase . '_DB_VERSION', $this->version, 'chaine', 0, '', $conf->entity);
 
-			dolibarr_set_const($this->db, 'DIGIQUALI_DOCUMENT_DIRECTORIES_NAME_BACKWARD_COMPATIBILITY', $this->version, 'integer', 1, '', $conf->entity);
-		}
-
-
-		dolibarr_set_const($this->db, 'DIGIQUALI_VERSION', $this->version, 'chaine', 0, '', $conf->entity);
-		dolibarr_set_const($this->db, 'DIGIQUALI_DB_VERSION', $this->version, 'chaine', 0, '', $conf->entity);
-
-		delDocumentModel('controldocument_odt', 'controldocument');
+        // Document templates
+        delDocumentModel('controldocument_odt', 'controldocument');
         delDocumentModel('surveydocument_odt', 'surveydocument');
         delDocumentModel('control_document', 'controldocument');
 
-		addDocumentModel('controldocument_odt', 'controldocument', 'ODT templates', 'DIGIQUALI_CONTROLDOCUMENT_ADDON_ODT_PATH');
-		addDocumentModel('surveydocument_odt', 'surveydocument', 'ODT templates', 'DIGIQUALI_SURVEYDOCUMENT_ADDON_ODT_PATH');
+        addDocumentModel('controldocument_odt', 'controldocument', 'ODT templates', $moduleNameUpperCase . '_CONTROLDOCUMENT_ADDON_ODT_PATH');
+        addDocumentModel('surveydocument_odt', 'surveydocument', 'ODT templates', $moduleNameUpperCase . '_SURVEYDOCUMENT_ADDON_ODT_PATH');
         addDocumentModel('control_document', 'controldocument', $langs->transnoentities('ControlDocumentPDF'));
 
-		if (!empty($conf->global->DIGIQUALI_SHEET_TAGS_SET) && empty($conf->global->DIGIQUALI_SHEET_DEFAULT_TAG)) {
-			global $user, $langs;
-			require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
-
-			$tags = new Categorie($this->db);
-			$tags->label = $langs->transnoentities('Default');
-			$tags->type  = 'sheet';
-			$tags->create($user);
-
-			dolibarr_set_const($this->db, 'DIGIQUALI_SHEET_DEFAULT_TAG', $tags->id, 'integer', 0, '', $conf->entity);
-		}
-        // Create extrafields during init.
-        include_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
+        // Create extrafields during init
+        require_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
         $extraFields = new ExtraFields($this->db);
 
         $objectsMetadata = saturne_get_objects_metadata();
@@ -877,9 +701,42 @@ class modDigiQuali extends DolibarrModules
             }
         }
 
-		if ($result < 0) {
-			return -1;
-		} // Do not activate module if error 'not allowed' returned when loading module SQL queries (the _load_table run sql with run_sql with the error allowed parameter set to 'default')
+        if (!getDolGlobalInt($moduleNameUpperCase . '_SHEET_TAGS_SET') && getDolGlobalInt($moduleNameUpperCase . '_SHEET_DEFAULT_TAG') == 0) {
+            require_once DOL_DOCUMENT_ROOT . '/categories/class/categorie.class.php';
+
+            $category = new Categorie($this->db);
+
+            $category->label = $langs->transnoentities('Default');
+            $category->type  = 'sheet';
+
+            $result = $category->create($user);
+            if ($result < 0) {
+                setEventMessages($category->error, $category->errors, 'errors');
+                return -1;
+            }
+
+            dolibarr_set_const($this->db, $moduleNameUpperCase . '_SHEET_DEFAULT_TAG', $category->id, 'integer', 0, '', $conf->entity);
+        }
+
+        if (getDolGlobalInt('DIGIQUALI_DOCUMENT_DIRECTORIES_NAME_BACKWARD_COMPATIBILITY') == 0) {
+            $documentsPath = DOL_DATA_ROOT . ($conf->entity > 1 ? '/' . $conf->entity : '');
+            $ecmPath =  $documentsPath . '/ecm' ;
+
+            if (is_dir($ecmPath)) {
+                if (is_dir($ecmPath . '/dolismq')) {
+                    chmod($ecmPath . '/dolismq', 0755);
+                    rename($ecmPath . '/dolismq', $ecmPath . '/digiquali');
+                }
+            }
+
+            $moduleDocumentsPath = $documentsPath . '/dolismq';
+            if (is_dir($moduleDocumentsPath)) {
+                chmod($moduleDocumentsPath, 0755);
+                rename($moduleDocumentsPath, $documentsPath . '/digiquali');
+            }
+
+            dolibarr_set_const($this->db, 'DIGIQUALI_DOCUMENT_DIRECTORIES_NAME_BACKWARD_COMPATIBILITY', $this->version, 'integer', 1, '', $conf->entity);
+        }
 
         if (getDolGlobalInt('DIGIQUALI_ACTIVE_STANDARD') == 0) {
             require_once __DIR__ . '/../../class/digiqualistandard.class.php';
@@ -916,7 +773,7 @@ class modDigiQuali extends DolibarrModules
             }
         }
 
-    if (getDolGlobalInt('DIGIQUALI_CONTROL_BACKWARD_COMPATIBILITY') == 0) {
+        if (getDolGlobalInt('DIGIQUALI_CONTROL_BACKWARD_COMPATIBILITY') == 0) {
         require_once TCPDF_PATH . 'tcpdf_barcodes_2d.php';
         require_once __DIR__ . '/../../class/control.class.php';
         $control  = new Control($this->db);
@@ -955,53 +812,50 @@ class modDigiQuali extends DolibarrModules
             dolibarr_set_const($this->db, 'DIGIQUALI_SHEET_BACKWARD_COMPATIBILITY', 1, 'integer', 0, '', $conf->entity);
         }
 
-		// Permissions
-		$this->remove($options);
+        $result = $this->_init($sql, $options);
 
-		$result = $this->_init($sql, $options);
+        if (getDolGlobalInt('DIGIQUALI_QUESTION_BACKWARD_COMPATIBILITY') == 0 && $result > 0) {
+            require_once __DIR__ . '/../../class/question.class.php';
+            require_once __DIR__ . '/../../class/answer.class.php';
 
-		if (getDolGlobalInt('DIGIQUALI_QUESTION_BACKWARD_COMPATIBILITY') == 0 && $result > 0) {
-			require_once __DIR__ . '/../../class/question.class.php';
-			require_once __DIR__ . '/../../class/answer.class.php';
+            $question  = new Question($this->db);
+            $answer    = new Answer($this->db);
 
-			$question  = new Question($this->db);
-			$answer    = new Answer($this->db);
+            $questions = $question->fetchAll('', '', 0, 0, ['customsql' => 't.type = \'OkKoToFixNonApplicable\'']);
+            if (is_array($questions) && !empty($questions)) {
+                foreach ($questions as $question) {
+                    $answer->fk_question = $question->id;
+                    $answer->value       = $langs->transnoentities('OK');
+                    $answer->pictogram   = 'check';
+                    $answer->color       = '#47e58e';
 
-			$questions = $question->fetchAll('', '', 0, 0, ['customsql' => 't.type = \'OkKoToFixNonApplicable\'']);
-			if (is_array($questions) && !empty($questions)) {
-				foreach ($questions as $question) {
-					$answer->fk_question = $question->id;
-					$answer->value       = $langs->transnoentities('OK');
-					$answer->pictogram   = 'check';
-					$answer->color       = '#47e58e';
+                    $answer->create($user);
 
-					$answer->create($user);
+                    $answer->fk_question = $question->id;
+                    $answer->value       = $langs->transnoentities('KO');
+                    $answer->pictogram   = 'times';
+                    $answer->color       = '#e05353';
 
-					$answer->fk_question = $question->id;
-					$answer->value       = $langs->transnoentities('KO');
-					$answer->pictogram   = 'times';
-					$answer->color       = '#e05353';
+                    $answer->create($user);
 
-					$answer->create($user);
+                    $answer->fk_question = $question->id;
+                    $answer->value       = $langs->transnoentities('ToFix');
+                    $answer->pictogram   = 'tools';
+                    $answer->color       = '#e9ad4f';
 
-					$answer->fk_question = $question->id;
-					$answer->value       = $langs->transnoentities('ToFix');
-					$answer->pictogram   = 'tools';
-					$answer->color       = '#e9ad4f';
+                    $answer->create($user);
 
-					$answer->create($user);
+                    $answer->fk_question = $question->id;
+                    $answer->value       = $langs->transnoentities('NonApplicable');
+                    $answer->pictogram   = 'N/A';
+                    $answer->color       = '#989898';
 
-					$answer->fk_question = $question->id;
-					$answer->value       = $langs->transnoentities('NonApplicable');
-					$answer->pictogram   = 'N/A';
-					$answer->color       = '#989898';
+                    $answer->create($user);
+                }
+            }
 
-					$answer->create($user);
-				}
-			}
-
-			dolibarr_set_const($this->db, 'DIGIQUALI_QUESTION_BACKWARD_COMPATIBILITY', 1, 'integer', 0, '', $conf->entity);
-		}
+            dolibarr_set_const($this->db, 'DIGIQUALI_QUESTION_BACKWARD_COMPATIBILITY', 1, 'integer', 0, '', $conf->entity);
+        }
 
         if (getDolGlobalInt('DIGIQUALI_CONTROL_ANSWER_BACKWARD') == 0 && $result > 0) {
 
@@ -1053,6 +907,20 @@ class modDigiQuali extends DolibarrModules
         $cronJob->fetch(0, 'ActionComm', 'sendEmailsReminder');
         $cronJob->reprogram_jobs($user->login, dol_now());
 
-		 return $result;
-	}
+        return $result;
+    }
+
+    /**
+     * Function called when module is disabled.
+     * Remove from database constants, boxes and permissions from Dolibarr database.
+     * Data directories are not deleted.
+     *
+     * @param  string $options Options when enabling module ('', 'noboxes')
+     * @return int             1 if OK, 0 if KO
+     */
+    public function remove($options = ''): int
+    {
+        $sql = [];
+        return $this->_remove($sql, $options);
+    }
 }

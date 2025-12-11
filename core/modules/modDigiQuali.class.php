@@ -686,7 +686,7 @@ class modDigiQuali extends DolibarrModules
         addDocumentModel('surveydocument_odt', 'surveydocument', 'ODT templates', $moduleNameUpperCase . '_SURVEYDOCUMENT_ADDON_ODT_PATH');
         addDocumentModel('control_document', 'controldocument', $langs->transnoentities('ControlDocumentPDF'));
 
-        // Create extrafields during init
+        // Create extra fields during init
         require_once DOL_DOCUMENT_ROOT . '/core/class/extrafields.class.php';
         $extraFields = new ExtraFields($this->db);
 
@@ -718,26 +718,6 @@ class modDigiQuali extends DolibarrModules
             dolibarr_set_const($this->db, $moduleNameUpperCase . '_SHEET_DEFAULT_TAG', $category->id, 'integer', 0, '', $conf->entity);
         }
 
-        if (getDolGlobalInt('DIGIQUALI_DOCUMENT_DIRECTORIES_NAME_BACKWARD_COMPATIBILITY') == 0) {
-            $documentsPath = DOL_DATA_ROOT . ($conf->entity > 1 ? '/' . $conf->entity : '');
-            $ecmPath =  $documentsPath . '/ecm' ;
-
-            if (is_dir($ecmPath)) {
-                if (is_dir($ecmPath . '/dolismq')) {
-                    chmod($ecmPath . '/dolismq', 0755);
-                    rename($ecmPath . '/dolismq', $ecmPath . '/digiquali');
-                }
-            }
-
-            $moduleDocumentsPath = $documentsPath . '/dolismq';
-            if (is_dir($moduleDocumentsPath)) {
-                chmod($moduleDocumentsPath, 0755);
-                rename($moduleDocumentsPath, $documentsPath . '/digiquali');
-            }
-
-            dolibarr_set_const($this->db, 'DIGIQUALI_DOCUMENT_DIRECTORIES_NAME_BACKWARD_COMPATIBILITY', $this->version, 'integer', 1, '', $conf->entity);
-        }
-
         if (getDolGlobalInt('DIGIQUALI_ACTIVE_STANDARD') == 0) {
             require_once __DIR__ . '/../../class/digiqualistandard.class.php';
 
@@ -762,7 +742,7 @@ class modDigiQuali extends DolibarrModules
 //
 //                $digiqualiElementId = $digiqualiElement->create($user);
 //                if ($digiqualiElementId > 0) {
-                    dolibarr_set_const($this->db, 'DIGIQUALI_ACTIVE_STANDARD', $digiqualiStandardId, 'integer', 0, '', $conf->entity);
+                dolibarr_set_const($this->db, 'DIGIQUALI_ACTIVE_STANDARD', $digiqualiStandardId, 'integer', 0, '', $conf->entity);
 //                } else {
 //                    setEventMessages($digiqualiElement->error, $digiqualiElement->errors, 'errors');
 //                    return -1;
@@ -773,30 +753,75 @@ class modDigiQuali extends DolibarrModules
             }
         }
 
-        if (getDolGlobalInt('DIGIQUALI_CONTROL_BACKWARD_COMPATIBILITY') == 0) {
-        require_once TCPDF_PATH . 'tcpdf_barcodes_2d.php';
-        require_once __DIR__ . '/../../class/control.class.php';
-        $control  = new Control($this->db);
-        $controls = $control->fetchAll();
-        if (is_array($controls) && !empty($controls)) {
-            foreach ($controls as $control) {
-                $control->track_id = generate_random_id();
-                $control->update($user, true);
-
-                $url = dol_buildpath('custom/digiquali/public/control/public_control.php?track_id=' . $control->track_id . '&entity=' . $conf->entity, 3);
-
-                $barcode = new TCPDF2DBarcode($url, 'QRCODE,L');
-                dol_mkdir(DOL_DATA_ROOT . (($conf->entity == 1 ) ? '/' : '/' . $conf->entity . '/') . 'digiquali/control/' . $control->ref . '/qrcode/');
-                $file = DOL_DATA_ROOT . (($conf->entity == 1 ) ? '/' : '/' . $conf->entity . '/') . 'digiquali/control/' . $control->ref . '/qrcode/barcode_' . $control->track_id . '.png';
-
-                $imageData = $barcode->getBarcodePngData();
-                $imageData = imagecreatefromstring($imageData);
-                imagepng($imageData, $file);
-            }
+        $result = $this->initBackwardCompatibility();
+        if ($result < 0) {
+            setEventMessages('', $this->errors, 'errors');
+            return -1;
         }
 
-        dolibarr_set_const($this->db, 'DIGIQUALI_CONTROL_BACKWARD_COMPATIBILITY', 1, 'integer', 0, '', $conf->entity);
+        return $this->_init($sql, $options);
     }
+
+    /**
+     * Function called when module is disabled.
+     * Remove from database constants, boxes and permissions from Dolibarr database.
+     * Data directories are not deleted.
+     *
+     * @param  string $options Options when enabling module ('', 'noboxes')
+     * @return int             1 if OK, 0 if KO
+     */
+    public function remove($options = ''): int
+    {
+        $sql = [];
+        return $this->_remove($sql, $options);
+    }
+
+    public function initBackwardCompatibility(): int
+    {
+        if (getDolGlobalInt('DIGIQUALI_DOCUMENT_DIRECTORIES_NAME_BACKWARD_COMPATIBILITY') == 0) {
+            $documentsPath = DOL_DATA_ROOT . ($conf->entity > 1 ? '/' . $conf->entity : '');
+            $ecmPath =  $documentsPath . '/ecm' ;
+
+            if (is_dir($ecmPath)) {
+                if (is_dir($ecmPath . '/dolismq')) {
+                    chmod($ecmPath . '/dolismq', 0755);
+                    rename($ecmPath . '/dolismq', $ecmPath . '/digiquali');
+                }
+            }
+
+            $moduleDocumentsPath = $documentsPath . '/dolismq';
+            if (is_dir($moduleDocumentsPath)) {
+                chmod($moduleDocumentsPath, 0755);
+                rename($moduleDocumentsPath, $documentsPath . '/digiquali');
+            }
+
+            dolibarr_set_const($this->db, 'DIGIQUALI_DOCUMENT_DIRECTORIES_NAME_BACKWARD_COMPATIBILITY', $this->version, 'integer', 1, '', $conf->entity);
+        }
+
+        if (getDolGlobalInt('DIGIQUALI_CONTROL_BACKWARD_COMPATIBILITY') == 0) {
+            require_once TCPDF_PATH . 'tcpdf_barcodes_2d.php';
+            require_once __DIR__ . '/../../class/control.class.php';
+            $control  = new Control($this->db);
+            $controls = $control->fetchAll();
+            if (is_array($controls) && !empty($controls)) {
+                foreach ($controls as $control) {
+                    $control->track_id = generate_random_id();
+                    $control->update($user, true);
+
+                    $url = dol_buildpath('custom/digiquali/public/control/public_control.php?track_id=' . $control->track_id . '&entity=' . $conf->entity, 3);
+
+                    $barcode = new TCPDF2DBarcode($url, 'QRCODE,L');
+                    dol_mkdir(DOL_DATA_ROOT . (($conf->entity == 1 ) ? '/' : '/' . $conf->entity . '/') . 'digiquali/control/' . $control->ref . '/qrcode/');
+                    $file = DOL_DATA_ROOT . (($conf->entity == 1 ) ? '/' : '/' . $conf->entity . '/') . 'digiquali/control/' . $control->ref . '/qrcode/barcode_' . $control->track_id . '.png';
+
+                    $imageData = $barcode->getBarcodePngData();
+                    $imageData = imagecreatefromstring($imageData);
+                    imagepng($imageData, $file);
+                }
+            }
+
+            dolibarr_set_const($this->db, 'DIGIQUALI_CONTROL_BACKWARD_COMPATIBILITY', 1, 'integer', 0, '', $conf->entity);
+        }
 
         if (getDolGlobalInt('DIGIQUALI_SHEET_BACKWARD_COMPATIBILITY') == 0) {
             require_once __DIR__ . '/../../class/sheet.class.php';
@@ -812,9 +837,7 @@ class modDigiQuali extends DolibarrModules
             dolibarr_set_const($this->db, 'DIGIQUALI_SHEET_BACKWARD_COMPATIBILITY', 1, 'integer', 0, '', $conf->entity);
         }
 
-        $result = $this->_init($sql, $options);
-
-        if (getDolGlobalInt('DIGIQUALI_QUESTION_BACKWARD_COMPATIBILITY') == 0 && $result > 0) {
+        if (getDolGlobalInt('DIGIQUALI_QUESTION_BACKWARD_COMPATIBILITY') == 0) {
             require_once __DIR__ . '/../../class/question.class.php';
             require_once __DIR__ . '/../../class/answer.class.php';
 
@@ -857,7 +880,7 @@ class modDigiQuali extends DolibarrModules
             dolibarr_set_const($this->db, 'DIGIQUALI_QUESTION_BACKWARD_COMPATIBILITY', 1, 'integer', 0, '', $conf->entity);
         }
 
-        if (getDolGlobalInt('DIGIQUALI_CONTROL_ANSWER_BACKWARD') == 0 && $result > 0) {
+        if (getDolGlobalInt('DIGIQUALI_CONTROL_ANSWER_BACKWARD') == 0) {
 
             require_once __DIR__ . '/../../class/control.class.php';
             require_once __DIR__ . '/../../class/sheet.class.php';
@@ -901,26 +924,6 @@ class modDigiQuali extends DolibarrModules
             dolibarr_set_const($this->db, 'DIGIQUALI_CONTROL_ANSWER_BACKWARD', 1, 'integer', 0, '', $conf->entity);
         }
 
-        require_once DOL_DOCUMENT_ROOT . '/cron/class/cronjob.class.php';
-
-        $cronJob = new Cronjob($this->db);
-        $cronJob->fetch(0, 'ActionComm', 'sendEmailsReminder');
-        $cronJob->reprogram_jobs($user->login, dol_now());
-
-        return $result;
-    }
-
-    /**
-     * Function called when module is disabled.
-     * Remove from database constants, boxes and permissions from Dolibarr database.
-     * Data directories are not deleted.
-     *
-     * @param  string $options Options when enabling module ('', 'noboxes')
-     * @return int             1 if OK, 0 if KO
-     */
-    public function remove($options = ''): int
-    {
-        $sql = [];
-        return $this->_remove($sql, $options);
+        return 1;
     }
 }

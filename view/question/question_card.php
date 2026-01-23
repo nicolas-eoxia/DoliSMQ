@@ -1164,30 +1164,12 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	// Print form confirm
 	print $formconfirm;
 
-	print '<div class="fichecenter">';
-	print '<div class="fichehalfleft">';
-	print '<table class="border centpercent tableforfield">';
+    print '<div class="fichecenter">';
+    print '<div class="fichehalfleft">';
+    print '<div class="underbanner clearboth"></div>';
+    print '<table class="border centpercent tableforfield">';
 
-	//Description -- Description
-	print '<tr><td class="titlefield">';
-	print $langs->trans("Description");
-	print '</td>';
-	print '<td>';
-	print $object->description;
-	print '</td></tr>';
-
-	// Type -- Type
-	print '<tr><td class="titlefield">';
-	print $langs->trans("QuestionType");
-	print '</td>';
-	print '<td>';
-	print $langs->transnoentities($object->type);
-	print '</td></tr>';
-
-	// Points -- Nombre de points
-	print '<tr><td class="valignmiddle">'.$langs->trans("NumberOfPoints").'</td><td>';
-	print $object->points;
-	print "</td></tr>";
+    require_once DOL_DOCUMENT_ROOT . '/core/tpl/commonfields_view.tpl.php';
 
     $objectConfig = json_decode($object->json, true)['config'] ?? [];
 
@@ -1213,30 +1195,6 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
         print $objectConfig[$object->type]['answer-max-value'] . ($object->type == 'Percentage' ? ' %' : '');
         print '</td></tr>';
     }
-
-	// EnterComment -- Saisir les commentaires
-	print '<tr><td class="titlefield">';
-	print $langs->trans("EnterComment");
-	print '</td>';
-	print '<td>';
-	print '<input type="checkbox" id="enter_comment" name="enter_comment"' . ($object->enter_comment ? ' checked=""' : '') . '" disabled> ';
-	print '</td></tr>';
-
-	// AuthorizeAnswerPhoto -- Utiliser les réponses de photos
-	print '<tr><td class="titlefield">';
-	print $langs->trans("AuthorizeAnswerPhoto");
-	print '</td>';
-	print '<td>';
-	print '<input type="checkbox" id="authorize_answer_photo" name="authorize_answer_photo"' . ($object->authorize_answer_photo ? ' checked=""' : '') . '" disabled> ';
-	print '</td></tr>';
-
-	// ShowPhoto -- Utiliser les photos
-	print '<tr><td class="titlefield">';
-	print $langs->trans("ShowPhoto");
-	print '</td>';
-	print '<td>';
-	print '<input type="checkbox" id="show_photo" name="show_photo"' . ($object->show_photo ? ' checked=""' : '') . '" disabled> ';
-	print '</td></tr>';
 
 	if ($object->show_photo > 0) {
 		//Photo OK -- Photo OK
@@ -1496,16 +1454,9 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
 	}
 	print dol_get_fiche_end();
 
-	print '<div class="fichecenter"><div class="fichehalfright">';
+    saturne_render_object_actions($object);
 
-	$morehtmlcenter = dolGetButtonTitle($langs->trans('SeeAll'), '', 'fa fa-bars imgforviewmode', dol_buildpath('/saturne/view/saturne_agenda.php', 1) . '?id=' . $object->id . '&module_name=DigiQuali&object_type=' . $object->element);
-
-	// List of actions on element
-	include_once DOL_DOCUMENT_ROOT.'/core/class/html.formactions.class.php';
-	$formactions = new FormActions($db);
-	$somethingshown = $formactions->showactions($object, $object->element . '@' . $object->module, '', 1, '', 10, '', $morehtmlcenter);
-
-	print '</div></div>';
+    print '</div>';
 }
 print '</div>';
 

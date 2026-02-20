@@ -242,6 +242,8 @@ if (empty($resHook)) {
         }
     }
 
+    require_once __DIR__ . '/../../../saturne/core/tpl/actions/list_actions.tpl.php';
+
     // Mass actions archive
     require_once __DIR__ . '/../../../saturne/core/tpl/actions/list_massactions.tpl.php';
 }
@@ -252,6 +254,35 @@ if (empty($resHook)) {
 
 $title = $langs->trans(ucfirst($object->element) . 'List');
 saturne_header(0,'', $title, $helpUrl ?? '', '', 0, 0, [], [], '', 'mod-' . $object->module . '-' . $object->element . ' page-list bodyforlist');
+
+$savedOrder      = getDolUserString('DIGIQUALI_QUESTION_COLUMN_ORDER_' . $user->id);
+$savedVisibility = getDolUserString('DIGIQUALI_QUESTION_COLUMN_VISIBILITY_' . $user->id);
+if (!empty($savedOrder) && !empty($savedVisibility)) {
+    $order      = json_decode($savedOrder);
+    $visibility = json_decode($savedVisibility, true);
+    // Réorganiser selon l'ordre
+    $orderedColumns = [];
+
+    foreach ($order as $key) {
+        if (isset($object->fields[$key])) {
+            $orderedColumns[$key] = $object->fields[$key];
+        }
+    }
+
+    // Ajouter les colonnes manquantes (qui ne sont pas dans savedOrder)
+    foreach ($object->fields as $key => $column) {
+        if (!isset($orderedColumns[$key])) {
+            $orderedColumns[$key] = $column;
+        }
+    }
+
+    $object->fields = $orderedColumns;
+} else {
+    $object->fields = dol_sort_array($object->fields, 'position');
+    $arrayfields    = dol_sort_array($arrayfields, 'position');
+}
+
+require_once __DIR__ . '/../../../saturne/core/tpl/modal/modal_column_order_component.tpl.php';
 
 require_once __DIR__ . '/../../../saturne/core/tpl/list/objectfields_list_build_sql_select.tpl.php';
 require_once __DIR__ . '/../../../saturne/core/tpl/list/objectfields_list_header.tpl.php';

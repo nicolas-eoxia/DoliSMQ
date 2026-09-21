@@ -178,17 +178,25 @@ foreach ($object->fields as $key => $val) {
     }
 }
 
+// An element can be tied to a control twice : by a link in llx_element_element and by a column of the
+// control itself (the user who carried it out, the project it belongs to). Its tab must show the union of
+// the two, and $search only knows how to AND its criterias, so the OR is emitted by the printFieldListWhere
+// hook. The element travels through the cache rather than through $search : the latter lands in the URL,
+// where the purge of the search criterias would drop it and leave the tab showing every control
+$columnMatchingLinkedElement = ['user' => 'fk_user_controller', 'project' => 'projectid'];
+
 if (!empty($fromType)) {
-    if (!empty($fromObjectMetadata)) {
+    if (isset($columnMatchingLinkedElement[$fromType])) {
+        $conf->cache['digiqualiLinkedElementOrColumn'] = [
+            'link_name' => $fromType,
+            'column'    => $columnMatchingLinkedElement[$fromType],
+            'id'        => $fromId
+        ];
+    } elseif (!empty($fromObjectMetadata)) {
         $search[$fromObjectMetadata['post_name']] = $fromId;
     }
-    switch ($fromType) {
-        case 'fk_sheet':
-            $search['fk_sheet'] = $fromId;
-            break;
-        case 'user':
-            $search['fk_user_controller'] = $fromId;
-            break;
+    if ($fromType == 'fk_sheet') {
+        $search['fk_sheet'] = $fromId;
     }
 }
 

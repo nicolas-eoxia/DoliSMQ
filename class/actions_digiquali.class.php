@@ -611,15 +611,16 @@ class ActionsDigiquali
     /**
      * Overloading the printFieldListWhere function : replacing the parent's function with the one below
      *
-     * @param  array $parameters Hook metadata (context, etc...)
-     * @return int               0 < on error, 0 on success, 1 to replace standard code
+     * @param  array       $parameters Hook metadata (context, etc...)
+     * @param  object|null $object     Current object
+     * @return int                     0 < on error, 0 on success, 1 to replace standard code
      * @throws Exception
      */
-    public function printFieldListWhere(array $parameters): int
+    public function printFieldListWhere(array $parameters, ?object $object = null): int
     {
         global $conf;
 
-        if (strpos($parameters['context'], 'controllist') !== false) {
+        if (preg_match('/surveylist|controllist/', $parameters['context'])) {
             $sql = '';
 
             // Second list of the controls tab of a product : the controls of its lots/serials. The
@@ -631,6 +632,22 @@ class ActionsDigiquali
                 $sql   .= ' AND EXISTS (SELECT 1 FROM ' . $this->db->prefix() . 'element_element AS eelot';
                 $sql   .= ' WHERE eelot.fk_target = t.rowid AND eelot.targettype = "digiquali_control"';
                 $sql   .= ' AND eelot.sourcetype = "productlot" AND eelot.fk_source IN (' . $lotIds . '))';
+            }
+
+            // Tab of an element the object also carries on one of its own columns (the controller of a
+            // control, the project of both) : the tab filters on the union of the link in llx_element_element
+            // and of that column, which no $search criteria can express since they are all ANDed. Read from
+            // the cache, set by the list page. The union is held in a single AND (...) and emitted before the
+            // verdict clause below, whose OR would otherwise pull it out of the filter. The link is matched
+            // by EXISTS rather than by the ee alias joined by printFieldListFrom : an OR on a LEFT JOIN
+            // returns the object once per linked element
+            if (!empty($conf->cache['digiqualiLinkedElementOrColumn']) && is_object($object)) {
+                $orFilter  = $conf->cache['digiqualiLinkedElementOrColumn'];
+                $elementId = (int) $orFilter['id'];
+                $sql      .= ' AND (EXISTS (SELECT 1 FROM ' . $this->db->prefix() . 'element_element AS eeor';
+                $sql      .= ' WHERE eeor.fk_target = t.rowid AND eeor.targettype = "' . $this->db->escape($object->module . '_' . $object->element) . '"';
+                $sql      .= ' AND eeor.sourcetype = "' . $this->db->escape($orFilter['link_name']) . '" AND eeor.fk_source = ' . $elementId . ')';
+                $sql      .= ' OR t.' . $this->db->sanitize($orFilter['column']) . ' = ' . $elementId . ')';
             }
 
             if (isset($parameters['search']['verdict']) && $parameters['search']['verdict'] != '' && $parameters['search']['verdict'] == 0) {

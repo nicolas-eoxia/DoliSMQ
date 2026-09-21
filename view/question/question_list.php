@@ -218,17 +218,19 @@ if (empty($resHook)) {
             if (GETPOSTISSET('sheet') && GETPOST('sheet') > 0) {
                 $sheet->fetch(GETPOSTINT('sheet'));
                 $sheet->fetchObjectLinked($sheet->id, $object->module . '_' . $sheet->element, null, $object->module . '_' . $object->element, 'OR', 1, 'position');
+                $questionIds = $sheet->linkedObjectsIds[$object->module . '_' . $object->element] ?? [];
                 foreach ($toselect as $selected) {
                     $object->fetch($selected);
-                    if (is_array($sheet->linkedObjectsIds[$object->module . '_' . $object->element]) && !empty($sheet->linkedObjectsIds[$object->module . '_' . $object->element]) && in_array($object->id, $sheet->linkedObjectsIds[$object->module . '_' . $object->element])) {
+                    if (in_array($object->id, $questionIds)) {
                         $questionInArray[] = $object->getNomUrl(1, 'nolink', 1);
                     } else {
                         $totalQuestions++;
-                        $object->add_object_linked($object->module . '_' . $sheet->element, GETPOST('sheet'));
-                        $questionIds   = $sheet->linkedObjectsIds[$object->module . '_' . $object->element];
+                        $object->add_object_linked($object->module . '_' . $sheet->element, GETPOSTINT('sheet'));
                         $questionIds[] = $object->id;
-                        $sheet->updateQuestionsPosition($questionIds);
                     }
+                }
+                if ($totalQuestions > 0) {
+                    $sheet->updateQuestionsPosition($questionIds);
                 }
                 if (!empty($questionInArray)) {
                     setEventMessages($langs->trans('WarningQuestionLink', count($questionInArray)) . ' ', $questionInArray, 'warnings');

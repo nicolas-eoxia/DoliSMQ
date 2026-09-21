@@ -135,6 +135,13 @@ AnswerWizardValidateText  = You answered %s question(s) out of %s. Once validate
 CommentLibrary = Comment library
 
 #
+# Mass add of questions into a template
+#
+
+NbQuestionsAlreadyInSheet     = %d question(s) already in it
+QuestionsInSheetWillBeIgnored = Questions already in the selected template will not be added.
+
+#
 # Public interface
 #
 

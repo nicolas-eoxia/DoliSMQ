@@ -170,8 +170,18 @@ foreach ($object->fields as $key => $val) {
     }
 }
 
+// A survey carries its project on one of its own columns as well as through a link in llx_element_element :
+// the project tab must show the union of the two. See the comment in view/control/control_list.php
+$columnMatchingLinkedElement = ['project' => 'projectid'];
+
 if (!empty($fromType)) {
-    if (!empty($fromObjectMetadata)) {
+    if (isset($columnMatchingLinkedElement[$fromType])) {
+        $conf->cache['digiqualiLinkedElementOrColumn'] = [
+            'link_name' => $fromType,
+            'column'    => $columnMatchingLinkedElement[$fromType],
+            'id'        => $fromId
+        ];
+    } elseif (!empty($fromObjectMetadata)) {
         $search[$fromObjectMetadata['post_name']] = $fromId;
     }
     if ($fromType == 'fk_sheet') {

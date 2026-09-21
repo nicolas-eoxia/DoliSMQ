@@ -180,3 +180,9 @@ ActivitySourceSpecimen     = Management process
 ActivitySourceFromSpecimen = Management
 ActivityInputDataSpecimen  = Company needs in terms of roles.<br>Occupational health and safety management system
 ActivityOutputDataSpecimen = Roles and responsibilities assigned<br>Health, Safety and Working Conditions Committee set up
+
+#
+# Standard
+#
+
+ISO9001Description = ISO 9001 standard - Quality management systems

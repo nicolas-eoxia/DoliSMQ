@@ -150,6 +150,7 @@ NCMineure                     = NC Mineure
 Observation                   = Observation
 ProgressTrack                 = Piste de progrès
 StrongPoint                   = Point fort
+ISO9001Description            = Norme ISO 9001 - Systèmes de management de la qualité
 ISO9001Conforme               = C - Conforme
 ISO9001NonConformite          = NC - Non-Conformité
 ISO9001Observation            = OBS - Observation

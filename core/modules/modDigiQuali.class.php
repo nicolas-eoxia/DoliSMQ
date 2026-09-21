@@ -958,7 +958,7 @@ class modDigiQuali extends DolibarrModules
             $digiqualiStandard->description = $langs->transnoentities('ISO9001Description');
 
             $digiqualiStandardId = $digiqualiStandard->create($user);
-            if ($digiqualiStandardId > 1) {
+            if ($digiqualiStandardId > 0) {
 //                require_once __DIR__ . '/../../class/digiqualielement.class.php';
 //
 //                $digiqualiElement = new DigiqualiElement($this->db);

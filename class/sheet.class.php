@@ -560,6 +560,8 @@ class Sheet extends SaturneObject
      */
     public function updateQuestionsPosition(array $questionIds)
     {
+        $error = 0;
+
         $this->db->begin();
 
         $questionIds = array_values($questionIds);

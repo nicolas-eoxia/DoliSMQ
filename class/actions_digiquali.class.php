@@ -1039,18 +1039,26 @@ class ActionsDigiquali
             }
 
             if ($parameters['massaction'] == 'pre_add_questions') {
+                require_once __DIR__ . '/question.class.php';
                 require_once __DIR__ . '/sheet.class.php';
-                $sheet  = new Sheet($this->db);
-                $sheets = $sheet->fetchAll('', '', 0, 0, ['customsql' => 't.status = ' . Sheet::STATUS_VALIDATED]);
+                $question = new Question($this->db);
+                $sheet    = new Sheet($this->db);
+                $sheets   = $sheet->fetchAll('', '', 0, 0, ['customsql' => 't.status = ' . Sheet::STATUS_VALIDATED]);
                 if (is_array($sheets) && !empty($sheets)) {
-                    $sheetArray = array_reduce($sheets, function ($carry, $sheet) {
-                        $carry[$sheet->id] = $sheet->ref . ' - ' . $sheet->label;
-                        return $carry;
-                    }, []);
+                    // Questions already linked to a sheet are ignored when the mass action runs, tell how many are concerned for each sheet
+                    $questionElement = $question->module . '_' . $question->element;
+                    $sheetArray      = [];
+                    foreach ($sheets as $sheetToSelect) {
+                        $sheetToSelect->fetchObjectLinked($sheetToSelect->id, $sheetToSelect->module . '_' . $sheetToSelect->element, null, $questionElement, 'OR', 1, 'position', 0);
+                        $linkedQuestionIds = $sheetToSelect->linkedObjectsIds[$questionElement] ?? [];
+                        $nbAlreadyInSheet  = count(array_intersect($parameters['toselect'], $linkedQuestionIds));
+
+                        $sheetArray[$sheetToSelect->id] = $sheetToSelect->ref . ' - ' . $sheetToSelect->label . ($nbAlreadyInSheet > 0 ? ' (' . $langs->trans('NbQuestionsAlreadyInSheet', $nbAlreadyInSheet) . ')' : '');
+                    }
                     $formQuestion = [
-                        ['type' => 'select', 'name' => 'sheet', 'label' => $langs->trans('Sheet'), 'values' => $sheetArray, 'morecss' => 'maxwidth300 maxwidth200onsmartphone']
+                        ['type' => 'select', 'name' => 'sheet', 'label' => $langs->trans('Sheet'), 'values' => $sheetArray, 'morecss' => 'maxwidth400 maxwidth200onsmartphone']
                     ];
-                    $this->resprints = $form->formconfirm($_SERVER['PHP_SELF'], $langs->trans('ConfirmMassAddQuestion'), $langs->trans('ConfirmMassAddingQuestion', count($parameters['toselect'])), 'add_questions', $formQuestion, '', 0, 200, 500, 1);
+                    $this->resprints = $form->formconfirm($_SERVER['PHP_SELF'], $langs->trans('ConfirmMassAddQuestion'), $langs->trans('ConfirmMassAddingQuestion', count($parameters['toselect'])) . '<br>' . $langs->trans('QuestionsInSheetWillBeIgnored'), 'add_questions', $formQuestion, '', 0, 200, 500, 1);
                 } else {
                     setEventMessages('<a href="' . dol_buildpath('custom/digiquali/view/sheet/sheet_list.php', 1) . '">' . $langs->transnoentities('ObjectNotFound', img_picto('', $sheet->picto, 'class="paddingrightonly"') . $langs->transnoentities(ucfirst($sheet->element))) . '</a>', [], 'warnings');
                 }

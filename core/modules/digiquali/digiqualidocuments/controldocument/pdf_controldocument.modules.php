@@ -1261,10 +1261,7 @@ class pdf_controldocument extends SaturneDocumentModel
     {
         global $action, $langs, $hookmanager, $user;
 
-        // Dolibarr core calls write_file without passing moreparams (stored in context instead)
-        if (empty($moreparams)) {
-            $moreparams = $objectDocument->context['moreparams'] ?? [];
-        }
+        $moreparams = self::getMoreParam($objectDocument, $moreparams);
 
         $control = $moreparams['object'] ?? null;
         if (empty($control)) {

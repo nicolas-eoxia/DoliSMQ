@@ -1266,6 +1266,8 @@ class pdf_controldocument extends SaturneDocumentModel
             $moreparams = $objectDocument->context['moreparams'] ?? [];
         }
 
+        $moreparams = self::getMoreParam($objectDocument, $moreparams);
+
         $control = $moreparams['object'] ?? null;
         if (empty($control)) {
             $this->error = 'MissingControlObject';

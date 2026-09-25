@@ -120,6 +120,10 @@ parameters:
         # NE PAS retirer en alignant ce fichier sur le gabarit commun : sans elle, la
         # baseline refige le numero et la release suivante casse (vu deux fois).
         - '#^Property DolibarrTriggers\:\:\$version \(.*\) does not accept .*\.$#'
+        # Contrepartie de cette redeclaration : le coeur type la propriete plus
+        # etroitement que string. Ce message-la ne contient aucun numero, il ne
+        # bouge donc pas d'une version a l'autre.
+        - '#^PHPDoc type string of property .*\:\:\$version is not covariant with PHPDoc type .* of overridden property DolibarrTriggers\:\:\$version\.$#'
         # Dolibarr ne documente jamais le type des valeurs d'un tableau (`@return array`),
         # donc cette erreur tomberait sur chaque nouveau fichier sans jamais pouvoir etre
         # resorbee.

@@ -27,12 +27,6 @@ parameters:
             # classe introuvable, non ignorable, qui empeche toute baseline.
             # « tests/ » au pluriel, lui, porte de vrais tests et reste analyse.
             - test/ (?)
-            # Le bootstrap PHPUnit de saturne declare des stubs DoliDB, Conf, Translate,
-            # User et HookManager. Scannes, ils gagnent sur les vraies classes du coeur et
-            # chaque appel de methode remonte en « undefined method » - d'ou une bonne part
-            # de la baseline. Saturne exclut deja ce fichier de sa propre analyse, mais
-            # scanDirectories prend ../saturne/ en entier. Issue #2617
-            - ../saturne/tests/ (?)
         analyse:
             # Les fragments de template sont inclus au milieu de la portee de leur
             # appelant : leurs variables sont indefinies par construction quand on les
@@ -76,6 +70,7 @@ parameters:
         - ../../cron/class/
         - ../../ecm/class/
         - ../../expedition/class/
+        - ../../expensereport/class/
         - ../../fichinter/class/
         - ../../fourn/class/
         - ../../holiday/class/
@@ -118,11 +113,6 @@ parameters:
         - CommonObject
 
     ignoreErrors:
-        # Le PHPDoc du coeur type DolibarrTriggers::$version comme une enumeration
-        # ('development', 'dolibarr', 'experimental'), alors que tous les modules y
-        # mettent leur numero de version. Fige dans la baseline, ce message casse la
-        # CI a chaque bump de version : il est ignore par motif.
-        - '#^Property DolibarrTriggers\:\:\$version \(.*\) does not accept .*\.$#'
         # Dolibarr ne documente jamais le type des valeurs d'un tableau (`@return array`),
         # donc cette erreur tomberait sur chaque nouveau fichier sans jamais pouvoir etre
         # resorbee.

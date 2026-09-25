@@ -2059,18 +2059,6 @@ parameters:
 			path: core/modules/modDigiQuali.class.php
 
 		-
-			message: '#^Call to method fetch\(\) on an unknown class Cronjob\.$#'
-			identifier: class.notFound
-			count: 1
-			path: core/modules/modDigiQuali.class.php
-
-		-
-			message: '#^Call to method reprogram_jobs\(\) on an unknown class Cronjob\.$#'
-			identifier: class.notFound
-			count: 1
-			path: core/modules/modDigiQuali.class.php
-
-		-
 			message: '#^Class DigiQualiStandard referenced with incorrect case\: DigiqualiStandard\.$#'
 			identifier: class.nameCase
 			count: 1
@@ -2079,12 +2067,6 @@ parameters:
 		-
 			message: '#^Comparison operation "\>\=" between 0\.0 and 22\.0 is always false\.$#'
 			identifier: greaterOrEqual.alwaysFalse
-			count: 1
-			path: core/modules/modDigiQuali.class.php
-
-		-
-			message: '#^Instantiated class Cronjob not found\.$#'
-			identifier: class.notFound
 			count: 1
 			path: core/modules/modDigiQuali.class.php
 

@@ -2083,12 +2083,6 @@ parameters:
 			path: core/modules/modDigiQuali.class.php
 
 		-
-			message: '#^Property DolibarrTriggers\:\:\$version \(''''\|''development''\|''dolibarr''\|''experimental''\) does not accept ''23\.1\.0''\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: core/triggers/interface_99_modDigiQuali_DigiQualiTriggers.class.php
-
-		-
 			message: '#^Access to undefined constant CommonObject\:\:STATUS_DRAFT\.$#'
 			identifier: classConstant.notFound
 			count: 1

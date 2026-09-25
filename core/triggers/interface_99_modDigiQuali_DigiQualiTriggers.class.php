@@ -33,6 +33,11 @@ require_once DOL_DOCUMENT_ROOT . '/core/triggers/dolibarrtriggers.class.php';
 class InterfaceDigiQualiTriggers extends DolibarrTriggers
 {
     /**
+     * @var string Trigger version.
+     */
+    public $version;
+
+    /**
      * Constructor
      *
      * @param DoliDB $db Database handler

@@ -47,6 +47,10 @@ ErrorQuestionUsedInSheet                = Question %s cannot be deleted, it is u
 ErrorQuestionGroupUsedInSheet           = Question group %s cannot be deleted, it is used in one or more templates.
 ErrorSheetUsedInControl                 = Template %s cannot be deleted, it is used in one or more controls/surveys.
 
+# Sheet tree
+ExpandAllGroups                         = Expand all
+CollapseAllGroups                       = Collapse all
+
 # Grading Policy
 GradingPolicy = Grading Policy
 Proportional = Proportional

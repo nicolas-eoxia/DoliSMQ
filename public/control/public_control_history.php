@@ -149,7 +149,7 @@ if (empty($linkableElement)) {
         }
     }
 }
-$linkedObject->fetchObjectLinked($objectId, $linkedObject->element, '', 'digiquali_control');
+$linkedObject->fetchObjectLinked($objectId, $linkedObject->element, null, 'digiquali_control');
 
 // Routes to display different views
 $routes = [

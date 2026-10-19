@@ -161,6 +161,9 @@ CommentLibrary = Comment library
 
 NbQuestionsAlreadyInSheet     = %d question(s) already in it
 QuestionsInSheetWillBeIgnored = Questions already in the selected template will not be added.
+GenerateQRCodes               = Generate QR codes (PDF)
+ConfirmMassGenerateQRCodes    = Generate a sheet of labels with the QR code of the public control history of the %d selected lot(s)?
+QRCodeLabelFormat             = Label format
 
 #
 # Public interface

@@ -123,12 +123,21 @@ $conf->setEntityValues($db, $entity);
 $linkableElements = saturne_get_objects_metadata();
 
 // Load object: the track id carries the element and the id of the controlled object. It comes from the URL of a
-// public page, so it is decoded defensively and only a Dolibarr object can be instantiated from it
-$objectData = json_decode((string) base64_decode($trackId, true));
+// public page, so it is decoded defensively and only a Dolibarr object can be instantiated from it. Signed track ids
+// are base64 "URL safe" (- and _), the former unsigned ones plain base64: both decode once - and _ are put back
+$objectData = json_decode((string) base64_decode(strtr($trackId, '-_', '+/'), true));
 $objectType = (is_object($objectData) && isset($objectData->type) && is_string($objectData->type)) ? $objectData->type : '';
 $objectId   = (is_object($objectData) && isset($objectData->id)) ? (int) $objectData->id : 0;
+$objectKey  = (is_object($objectData) && isset($objectData->key) && is_string($objectData->key)) ? $objectData->key : '';
 
 if ($objectType === '' || $objectId <= 0 || !class_exists($objectType) || !is_subclass_of($objectType, 'CommonObject')) {
+    httponly_accessforbidden($langs->trans('ErrorRecordNotFound'), 404);
+}
+
+// Without its key, a track id can be guessed from one object to the next: only a signed one opens the page, apart
+// from the links that were not guessed (see digiquali_public_control_unsigned_allowed())
+$isSigned = $objectKey !== '' && hash_equals(digiquali_public_control_key($objectType, $objectId), $objectKey);
+if (!$isSigned && !digiquali_public_control_unsigned_allowed($trackId, $user)) {
     httponly_accessforbidden($langs->trans('ErrorRecordNotFound'), 404);
 }
 

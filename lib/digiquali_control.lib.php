@@ -973,3 +973,107 @@ function digiquali_filter_control_actions(array $actions, array $filters): array
         return true;
     });
 }
+
+/**
+ * Get the secret signing the track ids of the public control history, created on first call
+ *
+ * Shared by every entity: the public page is reached without one
+ *
+ * @return string Secret (64 hexadecimal characters)
+ * @throws Exception
+ */
+function digiquali_public_control_secret(): string
+{
+    global $db;
+
+    $secret = getDolGlobalString('DIGIQUALI_PUBLIC_CONTROL_SECRET');
+    if (dol_strlen($secret) < 64) {
+        require_once DOL_DOCUMENT_ROOT . '/core/lib/admin.lib.php';
+
+        $secret = bin2hex(random_bytes(32));
+        dolibarr_set_const($db, 'DIGIQUALI_PUBLIC_CONTROL_SECRET', $secret, 'chaine', 0, '', 0);
+    }
+
+    return $secret;
+}
+
+/**
+ * Get the key signing the track id of an object: without the secret, the URL of another object cannot be guessed
+ *
+ * @param  string $objectType Object element (productlot...)
+ * @param  int    $objectId   Object id
+ * @return string             Key (16 hexadecimal characters)
+ * @throws Exception
+ */
+function digiquali_public_control_key(string $objectType, int $objectId): string
+{
+    return substr(hash_hmac('sha256', dol_strtolower($objectType) . ':' . $objectId, digiquali_public_control_secret()), 0, 16);
+}
+
+/**
+ * Get the signed track id of an object for the public control history
+ *
+ * Base64 "URL safe" (- and _ instead of + and /, no =), so it can be put in a URL as it is
+ *
+ * @param  CommonObject $object Controlled object
+ * @return string               Track id
+ * @throws Exception
+ */
+function digiquali_public_control_track_id(CommonObject $object): string
+{
+    $data = ['type' => $object->element, 'id' => (int) $object->id, 'key' => digiquali_public_control_key($object->element, (int) $object->id)];
+
+    return rtrim(strtr(base64_encode((string) json_encode($data)), '+/', '-_'), '=');
+}
+
+/**
+ * Get the URL of the public control history of an object
+ *
+ * @param  CommonObject $object Controlled object
+ * @param  bool         $signed False for the former unsigned URL, still used by the links published before signing
+ * @return string               Full URL
+ * @throws Exception
+ */
+function digiquali_public_control_history_url(CommonObject $object, bool $signed = true): string
+{
+    global $conf;
+
+    $trackId = $signed ? digiquali_public_control_track_id($object) : base64_encode((string) json_encode(['type' => $object->element, 'id' => (int) $object->id]));
+
+    return dol_buildpath('custom/digiquali/public/control/public_control_history.php?track_id=' . $trackId . '&entity=' . $conf->entity, 3);
+}
+
+/**
+ * Check whether an unsigned track id may still open the public control history
+ *
+ * Unsigned track ids can be guessed from one object to the next, they are only accepted when they were not guessed:
+ * for a back office user, or when a link published with EasyURL leads to them (QR codes stuck before signing)
+ *
+ * @param  string $trackId Track id as received
+ * @param  User   $user    Current user, logged in or not
+ * @return bool            True if allowed
+ */
+function digiquali_public_control_unsigned_allowed(string $trackId, User $user): bool
+{
+    global $db;
+
+    if ($user->hasRight('digiquali', 'control', 'read')) {
+        return true;
+    }
+
+    if (!isModEnabled('easyurl') || dol_strlen($trackId) == 0) {
+        return false;
+    }
+
+    $sql   = 'SELECT COUNT(t.rowid) as nb FROM ' . $db->prefix() . 'easyurl_shortener as t';
+    $sql  .= " WHERE t.original_url LIKE '%" . $db->escape($db->escapeforlike('track_id=' . $trackId . '&')) . "%'";
+    $resql = $db->query($sql);
+    if (!$resql) {
+        return false;
+    }
+
+    $obj = $db->fetch_object($resql);
+    $db->free($resql);
+
+    return is_object($obj) && (int) $obj->nb > 0;
+}

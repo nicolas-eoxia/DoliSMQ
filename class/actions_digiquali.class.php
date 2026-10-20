@@ -199,9 +199,10 @@ class ActionsDigiquali
             require_once __DIR__ . '/../class/survey.class.php';
         }
 
-        if (strpos($parameters['context'], 'product_lotlist') !== false && $action == 'generate_qrcodes' && GETPOST('confirm', 'alpha') == 'yes') {
-            $lotIds = array_map('intval', GETPOST('toselect', 'array'));
-            if ($this->generateQRCodeLabels($lotIds, GETPOST('modellabel', 'aZ09')) < 0) {
+        $qrCodeObjectMetadata = $this->getQRCodeObjectMetadata($parameters['context']);
+        if (!empty($qrCodeObjectMetadata) && $action == 'generate_qrcodes' && GETPOST('confirm', 'alpha') == 'yes') {
+            $objectIds = array_map('intval', GETPOST('toselect', 'array'));
+            if ($this->generateQRCodeLabels($qrCodeObjectMetadata, $objectIds, GETPOST('modellabel', 'aZ09')) < 0) {
                 setEventMessages($this->error, $this->errors, 'errors');
             }
         }
@@ -978,7 +979,7 @@ class ActionsDigiquali
             $this->resprints = $out;
         }
 
-        if (strpos($parameters['context'], 'product_lotlist') !== false) {
+        if (!empty($this->getQRCodeObjectMetadata($parameters['context']))) {
             $langs->load('digiquali@digiquali');
 
             $label = '<span class="fas fa-qrcode paddingrightonly"></span>' . $langs->transnoentities('GenerateQRCodes');
@@ -1032,7 +1033,7 @@ class ActionsDigiquali
             }
         }
 
-        if (strpos($parameters['context'], 'product_lotlist') !== false && $parameters['massaction'] == 'pre_generate_qrcodes') {
+        if ($parameters['massaction'] == 'pre_generate_qrcodes' && !empty($this->getQRCodeObjectMetadata($parameters['context']))) {
             // format_cards.lib.php fills $_Avery_Labels at include time with the $db of the including scope
             global $_Avery_Labels, $db;
 
@@ -1534,8 +1535,9 @@ class ActionsDigiquali
     /**
      * Get the URL of the public control history of an object, as short as possible for QR codes
      *
-     * An EasyURL link set for this page wins, otherwise a Saturne short URL is created on first call.
-     * The full URL is kept only when Saturne is too old to provide short URLs.
+     * An EasyURL link set for this page wins, whether it leads to the signed URL or to the former unsigned one (QR codes
+     * stuck before signing), otherwise a Saturne short URL of the signed URL is created on first call.
+     * The full signed URL is kept only when Saturne is too old to provide short URLs.
      *
      * @param  CommonObject $object Object whose controls are shown (product lot, ...)
      * @return string               Public URL
@@ -1543,16 +1545,18 @@ class ActionsDigiquali
      */
     protected function getPublicControlHistoryUrl(CommonObject $object): string
     {
-        global $conf, $user;
+        global $user;
 
-        $trackId = base64_encode(json_encode(['type' => $object->element, 'id' => (int) $object->id]));
-        $fullUrl = dol_buildpath('custom/digiquali/public/control/public_control_history.php?track_id=' . $trackId . '&entity=' . $conf->entity, 3);
+        require_once __DIR__ . '/../lib/digiquali_control.lib.php';
+
+        $fullUrl = digiquali_public_control_history_url($object);
 
         if (isModEnabled('easyurl')) {
             require_once __DIR__ . '/../../easyurl/class/shortener.class.php';
 
+            $urls      = "'" . $this->db->escape($fullUrl) . "', '" . $this->db->escape(digiquali_public_control_history_url($object, false)) . "'";
             $shortener = new Shortener($this->db);
-            if ($shortener->fetch(0, '', " AND t.original_url = '" . $this->db->escape($fullUrl) . "'") > 0 && !empty($shortener->short_url)) {
+            if ($shortener->fetch(0, '', ' AND t.original_url IN (' . $urls . ')') > 0 && !empty($shortener->short_url)) {
                 return $shortener->short_url;
             }
         }
@@ -1590,17 +1594,44 @@ class ActionsDigiquali
     }
 
     /**
-     * Send a PDF sheet of labels, one QR code to the public control history per product lot
+     * Get the registry entry of the object listed in a hook context, when it can get QR code labels
      *
-     * The label engine of Dolibarr core (printsheet, tcpdflabel template) does the layout on the chosen label format.
-     * On success the PDF is streamed and the script ends.
+     * Product lots always can, other objects once DigiQuali may control them (DIGIQUALI_SHEET_LINK_<TYPE>). Contexts are
+     * compared whole: a substring test would take supplierinvoicelist for invoicelist
      *
-     * @param  int[]  $lotIds     Product lot ids
-     * @param  string $modelLabel Label format code (llx_c_format_cards)
-     * @return int                -1 on error, the script ends on success
+     * @param  string               $context Hook context, contexts joined by ":"
+     * @return array<string, mixed>          Registry entry of the object, empty if none
      * @throws Exception
      */
-    protected function generateQRCodeLabels(array $lotIds, string $modelLabel): int
+    protected function getQRCodeObjectMetadata(string $context): array
+    {
+        require_once __DIR__ . '/../lib/digiquali_linked_object.lib.php';
+
+        $contexts     = explode(':', $context);
+        $enabledTypes = array_merge(['productlot'], digiquali_get_enabled_linked_object_types());
+        foreach (digiquali_get_linkable_objects() as $objectType => $objectMetadata) {
+            if (in_array($objectType, $enabledTypes) && !empty($objectMetadata['hook_name_list']) && in_array($objectMetadata['hook_name_list'], $contexts)) {
+                return $objectMetadata;
+            }
+        }
+
+        return [];
+    }
+
+    /**
+     * Send a PDF sheet of labels, one QR code to the public control history per object
+     *
+     * The label engine of Dolibarr core (printsheet, tcpdflabel template) does the layout on the chosen label format.
+     * Next to the QR code: the name of the object, and the product of a product lot.
+     * On success the PDF is streamed and the script ends.
+     *
+     * @param  array<string, mixed> $objectMetadata Registry entry of the objects
+     * @param  int[]                $objectIds      Object ids
+     * @param  string               $modelLabel     Label format code (llx_c_format_cards)
+     * @return int                                  -1 on error, the script ends on success
+     * @throws Exception
+     */
+    protected function generateQRCodeLabels(array $objectMetadata, array $objectIds, string $modelLabel): int
     {
         // format_cards.lib.php fills $_Avery_Labels at include time with the $db of the including scope
         global $_Avery_Labels, $conf, $db, $langs;
@@ -1608,7 +1639,9 @@ class ActionsDigiquali
         require_once DOL_DOCUMENT_ROOT . '/core/lib/format_cards.lib.php';
         require_once DOL_DOCUMENT_ROOT . '/core/modules/printsheet/modules_labels.php';
         require_once DOL_DOCUMENT_ROOT . '/product/class/product.class.php';
-        require_once DOL_DOCUMENT_ROOT . '/product/stock/class/productlot.class.php';
+        if (!empty($objectMetadata['class_path'])) {
+            require_once DOL_DOCUMENT_ROOT . '/' . $objectMetadata['class_path'];
+        }
 
         $langs->loadLangs(['errors', 'digiquali@digiquali']);
 
@@ -1617,22 +1650,34 @@ class ActionsDigiquali
             return -1;
         }
 
+        $className = (string) ($objectMetadata['class_name'] ?? '');
+        $nameField = (string) ($objectMetadata['name_field'] ?? 'ref');
+        if ($className === '' || !class_exists($className)) {
+            $this->error = $langs->trans('ErrorRecordNotFound');
+            return -1;
+        }
+
         $records = [];
-        foreach ($lotIds as $lotId) {
-            $productLot = new Productlot($this->db);
-            if ($lotId <= 0 || $productLot->fetch($lotId) <= 0) {
+        foreach ($objectIds as $objectId) {
+            $object = new $className($this->db);
+            if ($objectId <= 0 || $object->fetch($objectId) <= 0) {
                 continue;
             }
 
-            $product = new Product($this->db);
-            $product->fetch($productLot->fk_product);
+            $text = (string) ($object->$nameField ?? $object->ref);
+            if ($object->element == 'productlot') {
+                $product = new Product($this->db);
+                if ($product->fetch($object->fk_product) > 0) {
+                    $text .= "\n" . $product->ref;
+                }
+            }
 
             $records[] = [
                 'textleft'   => '%BARCODE%',
                 'textheader' => '',
                 'textfooter' => '',
-                'textright'  => $productLot->batch . "\n" . $product->ref,
-                'code'       => $this->getPublicControlHistoryUrl($productLot),
+                'textright'  => $text,
+                'code'       => $this->getPublicControlHistoryUrl($object),
                 'encoding'   => 'QRCODE,M',
                 'is2d'       => 1,
             ];

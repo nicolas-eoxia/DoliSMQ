@@ -1078,3 +1078,43 @@ function digiquali_public_control_unsigned_allowed(string $trackId, User $user):
 
     return is_object($obj) && (int) $obj->nb > 0;
 }
+
+/**
+ * Delete the Saturne short URLs leading to the public control history of an object, once the object is deleted
+ *
+ * Every form of the target is looked for : signed or not, absolute or relative to the root of Dolibarr
+ *
+ * @param  CommonObject $object Deleted object
+ * @return int                  Number of deleted short URLs, -1 on error
+ * @throws Exception
+ */
+function digiquali_delete_public_control_short_urls(CommonObject $object): int
+{
+    global $db;
+
+    if (empty($object->element) || (int) $object->id <= 0) {
+        return 0;
+    }
+
+    $urls = [digiquali_public_control_history_url($object, false)];
+    // No secret yet means no signed URL was ever made: do not create one for a deletion
+    if (getDolGlobalString('DIGIQUALI_PUBLIC_CONTROL_SECRET') !== '') {
+        $urls[] = digiquali_public_control_history_url($object);
+    }
+
+    $targets = [];
+    foreach ($urls as $url) {
+        $targets[] = "'" . $db->escape($url) . "'";
+        if (strpos($url, DOL_MAIN_URL_ROOT . '/') === 0) {
+            $targets[] = "'" . $db->escape(substr($url, strlen(DOL_MAIN_URL_ROOT))) . "'";
+        }
+    }
+
+    $sql = 'DELETE FROM ' . $db->prefix() . 'saturne_object_redirection WHERE to_url IN (' . implode(', ', $targets) . ')';
+    $resql = $db->query($sql);
+    if (!$resql) {
+        return -1;
+    }
+
+    return (int) $db->affected_rows($resql);
+}

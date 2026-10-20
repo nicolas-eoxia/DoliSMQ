@@ -1557,8 +1557,8 @@ class ActionsDigiquali
             }
         }
 
-        // Saturne provides short URLs since its public/s/ entry point
-        if (is_file(__DIR__ . '/../../saturne/public/s/index.php')) {
+        // Saturne provides short URLs since its s/ entry point
+        if (is_file(__DIR__ . '/../../saturne/s/index.php')) {
             require_once __DIR__ . '/../../saturne/class/saturneredirection.class.php';
 
             $saturneRedirection = new SaturneRedirection($this->db);

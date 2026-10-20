@@ -108,7 +108,8 @@ function get_linked_object_infos(CommonObject $linkedObject, array $linkableElem
         $linkedObject->element = 'product_lot';
     }
 
-    $ecmFiles->fetchAll('', '', 0, 0, 't.share:isnot:null');
+    // Only the shared files of the object: the instance may share thousands of them
+    $ecmFiles->fetchAll('', '', 0, 0, "(t.share:isnot:null) AND (t.src_object_type:=:'" . $db->escape($linkedObject->element) . "') AND (t.src_object_id:=:" . ((int) $linkedObject->id) . ")");
 
     // Filter ecm files by filepath containing linked object element
     $filteredEcmFilesLine = [];
@@ -199,8 +200,8 @@ function get_linked_object_infos(CommonObject $linkedObject, array $linkableElem
             $out['parentLinkedObject']['title']      = $langs->transnoentities($linkedObjectParentData['langs']);
             $out['parentLinkedObject']['name_field'] = $permissionToRead ? $parentLinkedObject->getNomUrl(1, '', 0, -1, 1) : img_picto('', $linkedObjectParentData['picto'], 'class="pictofixedwidth"') . $parentLinkedObject->{$linkedObjectParentData['name_field']};
 
-            // Filter ecm files by filepath containing linked object element
-            $ecmFiles->fetchAll('', '', 0, 0, 't.share:isnot:null');
+            // Only the shared files of the parent object: the instance may share thousands of them
+            $ecmFiles->fetchAll('', '', 0, 0, "(t.share:isnot:null) AND (t.src_object_type:=:'" . $db->escape($parentLinkedObject->element) . "') AND (t.src_object_id:=:" . ((int) $parentLinkedObject->id) . ")");
 
             $filteredEcmFilesLine = [];
             if (is_array($ecmFiles->lines) && !empty($ecmFiles->lines)) {

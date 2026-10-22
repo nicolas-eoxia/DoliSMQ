@@ -831,7 +831,7 @@ class Control extends SaturneObject
                 $path = $dir . '/' . $objectRef . '/answer_photo';
                 if (dol_is_dir($path)) {
                     dol_mkdir($dir . '/' . $objectFromClone->ref . '/answer_photo');
-                    dolCopyDir($path, $dir . '/' . $objectFromClone->ref . '/answer_photo', 0, 1);
+                    dolCopyDir($path, $dir . '/' . $objectFromClone->ref . '/answer_photo', '0', 1);
                 }
             }
 

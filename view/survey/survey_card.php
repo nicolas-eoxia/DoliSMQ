@@ -141,6 +141,7 @@ if (empty($resHook)) {
 
     // Action clone object
     if ($action == 'confirm_clone' && $confirm == 'yes') {
+        $options['answers']    = GETPOST('clone_answers');
         $options['attendants'] = GETPOST('clone_attendants');
         $options['photos']     = GETPOST('clone_photos');
         if ($object->id > 0) {
@@ -404,6 +405,7 @@ if ($object->id > 0 && (empty($action) || ($action != 'edit' && $action != 'crea
     if (($action == 'clone' && (empty($conf->use_javascript_ajax) || !empty($conf->dol_use_jmobile))) || (!empty($conf->use_javascript_ajax) && empty($conf->dol_use_jmobile))) {
         // Define confirmation messages
         $formQuestionClone = [
+            ['type' => 'checkbox', 'name' => 'clone_answers',    'label' => $langs->trans('CloneAnswers'),    'value' => 1],
             ['type' => 'checkbox', 'name' => 'clone_attendants', 'label' => $langs->trans('CloneAttendants'), 'value' => 1],
             ['type' => 'checkbox', 'name' => 'clone_photos',     'label' => $langs->trans('ClonePhotos'),     'value' => 1]
         ];

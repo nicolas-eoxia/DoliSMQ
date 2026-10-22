@@ -236,7 +236,7 @@ if (empty($resHook)) {
     // #2687: change the controller, its signatory follows (handled before the generic set action which would skip it)
     if ($action == 'setfk_user_controller' && $permissiontoadd) {
         $controllerId = GETPOSTINT('fk_user_controller');
-        if ($controllerId > 0 && $object->fetch($id) > 0) {
+        if ($controllerId > 0 && $object->fetch((int) $id) > 0) {
             $object->fk_user_controller = $controllerId;
             $result = $object->update($user);
             if ($result > 0) {

@@ -811,12 +811,13 @@ class Control extends SaturneObject
                             continue;
                         }
 
+                        // Typed properties without default stay uninitialized when the column is NULL.
                         $clonedLine                = array_shift($clonedLines);
-                        $clonedLine->answer        = $sourceLine->answer;
-                        $clonedLine->comment       = $sourceLine->comment;
-                        $clonedLine->answer_photo  = $sourceLine->answer_photo;
-                        $clonedLine->earned_points = $sourceLine->earned_points;
-                        $clonedLine->score_rate    = $sourceLine->score_rate;
+                        $clonedLine->answer        = $sourceLine->answer ?? null;
+                        $clonedLine->comment       = $sourceLine->comment ?? null;
+                        $clonedLine->answer_photo  = $sourceLine->answer_photo ?? null;
+                        $clonedLine->earned_points = $sourceLine->earned_points ?? null;
+                        $clonedLine->score_rate    = $sourceLine->score_rate ?? null;
                         if ($clonedLine->update($user, 1) < 0) {
                             $error++;
                             $this->error  = $clonedLine->error;

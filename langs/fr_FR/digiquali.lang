@@ -545,6 +545,7 @@ LockingDate                                    = Date de verrouillage
 ArchivingDate                                  = Date d'archivage
 DraftValidatedLocked                           = -- (Brouillon + validé + verrouillé) --
 CloneControlEquipments                         = Cloner les moyens de contrôle
+CloneAnswers                                   = Cloner les réponses (commentaires et photos compris)
 NoControl                                      = Aucun contrôle
 NoPeriodicityControl                           = Aucune périodicité de contrôle
 NoDocumentation                                = Aucun document lié

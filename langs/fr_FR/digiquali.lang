@@ -795,6 +795,17 @@ LinkedContactsControl   = Contact(s) associés au contrôle
 LinkedControllerControl = Contrôleur(s) associés au contrôle
 NoEquipmentFound        = Aucun équipement trouvé.
 
+PDFControlSummary             = Synthèse du contrôle & détails des questions
+PDFControlQuestionDetails     = Détails des questions et réponses
+PDFControlAuditors            = Auditeurs
+PDFControlResult              = Résultat du contrôle
+PDFControlElectronicallySigned = signés électroniquement
+PDFControlCommentLabel        = Commentaire :
+PDFControlGroup               = Groupe : %s
+PDFControlSheetRef            = Modèle %s
+PDFControlTemplate            = Modèle : %s
+PDFControlCorrectiveAction    = Action corrective
+
 #
 # Question categories - NF
 #
